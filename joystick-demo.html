@@ -41,6 +41,11 @@
   const actor={x:0.5,y:0.5,z:0.96,dir:1,walk:0}; // normalized screen coords
   const joy={active:false,id:null,bx:0,by:0,kx:0,ky:0,dx:0,dy:0,max:46};
   let shieldUntil=0,roarUntil=0,slashUntil=0;
+
+  function hardCenter(){
+    actor.x=0.5; actor.y=0.5; actor.z=0.96;
+    joy.dx=0; joy.dy=0;
+  }
   let shake=0,flash=0;
 
   function resize(){
@@ -48,7 +53,8 @@
     canvas.height=innerHeight*devicePixelRatio;
     ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
   }
-  addEventListener('resize',resize);resize();
+  addEventListener('resize',()=>{ resize(); hardCenter(); centerFrames=12; });
+resize();
 
   btnCam.onclick=async()=>{
     try{
@@ -182,6 +188,7 @@
   }
 
   let last=performance.now();
+  hardCenter();
   let booted=false;
   let centerFrames=36;
   function loop(now){
@@ -193,14 +200,14 @@
       booted=true;
     }
 
-    if(centerFrames>0){ actor.x=0.5; actor.y=0.5; actor.z=0.96; joy.dx=0; joy.dy=0; centerFrames--; }
+    if(centerFrames>0){ hardCenter(); centerFrames--; }
     // filter-style full-screen movement
     actor.x += joy.dx*0.52*dt;
     actor.y += joy.dy * 0.28 * dt;
     actor.z += joy.dy * 0.55 * dt;
 
-    actor.x = Math.max(0.08, Math.min(0.92, actor.x));
-    actor.y = Math.max(0.22, Math.min(0.86, actor.y));
+    actor.x = Math.max(0.22, Math.min(0.78, actor.x));
+    actor.y = Math.max(0.30, Math.min(0.70, actor.y));
     actor.z = Math.max(0.60, Math.min(0.995, actor.z));
 
     if(Math.abs(joy.dx)>0.06) actor.dir = Math.sign(joy.dx);
