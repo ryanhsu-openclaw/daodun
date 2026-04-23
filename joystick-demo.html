@@ -3,36 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>我的刀盾 3D 狗狗</title>
+  <title>我的刀盾 3D 角色</title>
   <style>
-    html, body { margin:0; height:100%; overflow:hidden; background:#000; font-family:system-ui,sans-serif; }
-    #cam { position:fixed; inset:0; width:100vw; height:100vh; object-fit:cover; background:#000; z-index:1; }
-    #app { position:fixed; inset:0; z-index:2; }
-    #ui { position:fixed; inset:0; pointer-events:none; z-index:3; }
-
-    .btns { position:absolute; right:16px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:14px; pointer-events:auto; }
-    .skill {
-      width:68px; height:68px; border:0; border-radius:18px;
-      background:rgba(255,255,255,.18); backdrop-filter: blur(4px);
-      color:#fff; font-size:28px;
-      box-shadow:0 8px 24px rgba(0,0,0,.26), inset 0 0 0 1px rgba(255,255,255,.22);
-    }
-    #btnCam {
-      position:absolute; left:14px; bottom:14px; pointer-events:auto;
-      background:rgba(32,32,32,.9); color:#fff; border:0; border-radius:12px;
-      padding:10px 14px; font-weight:700;
-    }
-
-    #joy { position:fixed; inset:0; pointer-events:none; z-index:4; }
-    .ring,.knob{ position:absolute; border-radius:50%; display:none; }
-    .ring{ width:92px; height:92px; margin:-46px 0 0 -46px; background:rgba(255,255,255,.14); }
-    .knob{ width:46px; height:46px; margin:-23px 0 0 -23px; background:rgba(255,255,255,.52); }
+    html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:system-ui,sans-serif}
+    #cam{position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:1;background:#000}
+    #app{position:fixed;inset:0;z-index:2}
+    #ui{position:fixed;inset:0;pointer-events:none;z-index:3}
+    .btns{position:absolute;right:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:14px;pointer-events:auto}
+    .skill{width:68px;height:68px;border:0;border-radius:18px;background:rgba(255,255,255,.18);backdrop-filter:blur(4px);color:#fff;font-size:28px;box-shadow:0 8px 24px rgba(0,0,0,.26),inset 0 0 0 1px rgba(255,255,255,.22)}
+    #btnCam{position:absolute;left:14px;bottom:14px;pointer-events:auto;background:rgba(32,32,32,.9);color:#fff;border:0;border-radius:12px;padding:10px 14px;font-weight:700}
+    #joy{position:fixed;inset:0;pointer-events:none;z-index:4}
+    .ring,.knob{position:absolute;border-radius:50%;display:none}.ring{width:92px;height:92px;margin:-46px 0 0 -46px;background:rgba(255,255,255,.14)}.knob{width:46px;height:46px;margin:-23px 0 0 -23px;background:rgba(255,255,255,.52)}
   </style>
 </head>
 <body>
   <video id="cam" autoplay playsinline muted></video>
   <div id="app"></div>
-
   <div id="ui">
     <div class="btns">
       <button class="skill" id="btnShield">🛡️</button>
@@ -41,217 +27,156 @@
     </div>
     <button id="btnCam">啟動相機</button>
   </div>
-
   <div id="joy"><div class="ring" id="ring"></div><div class="knob" id="knob"></div></div>
 
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
-const app = document.getElementById('app');
-const video = document.getElementById('cam');
-const btnCam = document.getElementById('btnCam');
-const ring = document.getElementById('ring');
-const knob = document.getElementById('knob');
+const video=document.getElementById('cam');
+const btnCam=document.getElementById('btnCam');
+const ring=document.getElementById('ring');
+const knob=document.getElementById('knob');
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(56, innerWidth/innerHeight, 0.1, 100);
-camera.position.set(0, 3.2, 7.2);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,100);
+camera.position.set(0,3.4,8);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x000000,0);
+document.getElementById('app').appendChild(renderer.domElement);
 
-const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
-renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.setClearColor(0x000000, 0);
-app.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff,0x345,1.05));
+const dl=new THREE.DirectionalLight(0xffffff,.95);dl.position.set(4,8,6);scene.add(dl);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(20,64),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.18}));
+floor.rotation.x=-Math.PI/2;floor.position.y=-0.02;scene.add(floor);
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0x334455, 1.05));
-const dir = new THREE.DirectionalLight(0xffffff, 0.95);
-dir.position.set(4,8,6); scene.add(dir);
+// ===== cute 3D humanoid rig =====
+const root=new THREE.Group();scene.add(root);root.position.set(0,0,0);
+const skin=new THREE.MeshStandardMaterial({color:0xffd7b0,roughness:.75});
+const cloth=new THREE.MeshStandardMaterial({color:0x6aa0ff,roughness:.7});
+const dark=new THREE.MeshStandardMaterial({color:0x30343c,roughness:.8});
 
-// 地面陰影圈
-const floor = new THREE.Mesh(
-  new THREE.CircleGeometry(8, 64),
-  new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.2 })
-);
-floor.rotation.x = -Math.PI/2;
-floor.position.y = -0.02;
-scene.add(floor);
+const body=new THREE.Mesh(new THREE.CapsuleGeometry(0.42,0.7,6,12),cloth); body.position.y=1.2; root.add(body);
+const headPivot=new THREE.Group(); headPivot.position.set(0,1.85,0); root.add(headPivot);
+const head=new THREE.Mesh(new THREE.SphereGeometry(0.34,24,24),skin); head.position.y=0.02; headPivot.add(head);
+const eyeL=new THREE.Mesh(new THREE.SphereGeometry(0.03,10,10),dark); eyeL.position.set(-0.10,0.03,0.30); headPivot.add(eyeL);
+const eyeR=eyeL.clone(); eyeR.position.x=0.10; headPivot.add(eyeR);
 
-// ===== 骨架節點（rig）狗狗 =====
-const dogRoot = new THREE.Group();
-scene.add(dogRoot);
-dogRoot.position.set(0,0,0);
-
-const bodyMat = new THREE.MeshStandardMaterial({ color:0xc98f52, roughness:0.75, metalness:0.05 });
-const darkMat = new THREE.MeshStandardMaterial({ color:0x5c4126, roughness:0.85 });
-
-const torso = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.72, 0.62), bodyMat);
-torso.position.y = 1.05;
-dogRoot.add(torso);
-
-const neck = new THREE.Group();
-neck.position.set(0.64, 1.24, 0);
-dogRoot.add(neck);
-const head = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.62, 0.56), bodyMat);
-head.position.x = 0.24;
-neck.add(head);
-
-const earL = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.22, 6), darkMat);
-earL.position.set(0.07, 0.35, 0.18); head.add(earL);
-const earR = earL.clone(); earR.position.z = -0.18; head.add(earR);
-
-const tailBase = new THREE.Group();
-tailBase.position.set(-0.77, 1.20, 0);
-dogRoot.add(tailBase);
-const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.03, 0.58, 8), darkMat);
-tail.rotation.z = Math.PI * 0.35;
-tail.position.set(-0.24, 0.22, 0);
-tailBase.add(tail);
-
-function makeLeg(x, z) {
-  const hip = new THREE.Group();
-  hip.position.set(x, 0.9, z);
-  const upper = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.42, 0.18), bodyMat);
-  upper.position.y = -0.22;
-  hip.add(upper);
-
-  const knee = new THREE.Group();
-  knee.position.y = -0.42;
-  hip.add(knee);
-
-  const lower = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.42, 0.16), bodyMat);
-  lower.position.y = -0.22;
-  knee.add(lower);
-
-  const paw = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.08, 0.20), darkMat);
-  paw.position.y = -0.46;
-  knee.add(paw);
-
-  dogRoot.add(hip);
-  return { hip, knee };
+function makeArm(side){
+  const shoulder=new THREE.Group(); shoulder.position.set(0.5*side,1.55,0); root.add(shoulder);
+  const upper=new THREE.Mesh(new THREE.CapsuleGeometry(0.09,0.35,4,8),cloth); upper.rotation.z=0.08*side; upper.position.y=-0.23; shoulder.add(upper);
+  const elbow=new THREE.Group(); elbow.position.y=-0.45; shoulder.add(elbow);
+  const lower=new THREE.Mesh(new THREE.CapsuleGeometry(0.08,0.32,4,8),skin); lower.position.y=-0.20; elbow.add(lower);
+  const hand=new THREE.Mesh(new THREE.SphereGeometry(0.10,12,12),skin); hand.position.y=-0.42; elbow.add(hand);
+  return {shoulder,elbow,hand};
 }
-
-const legFL = makeLeg(0.45, 0.22);
-const legFR = makeLeg(0.45, -0.22);
-const legBL = makeLeg(-0.45, 0.22);
-const legBR = makeLeg(-0.45, -0.22);
-
-// 武器/特效
-function makeEmojiSprite(emoji, size=256){
-  const c=document.createElement('canvas'); c.width=c.height=size;
-  const x=c.getContext('2d');
-  x.font=`${size*0.72}px "Apple Color Emoji","Segoe UI Emoji",sans-serif`;
-  x.textAlign='center'; x.textBaseline='middle';
-  x.fillText(emoji,size/2,size/2);
-  const t=new THREE.CanvasTexture(c);
-  return new THREE.Sprite(new THREE.SpriteMaterial({ map:t, transparent:true }));
+function makeLeg(side){
+  const hip=new THREE.Group(); hip.position.set(0.22*side,0.85,0); root.add(hip);
+  const upper=new THREE.Mesh(new THREE.CapsuleGeometry(0.11,0.42,4,8),dark); upper.position.y=-0.28; hip.add(upper);
+  const knee=new THREE.Group(); knee.position.y=-0.52; hip.add(knee);
+  const lower=new THREE.Mesh(new THREE.CapsuleGeometry(0.10,0.42,4,8),dark); lower.position.y=-0.25; knee.add(lower);
+  const foot=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.08,0.32),dark); foot.position.set(0,-0.50,0.08); knee.add(foot);
+  return {hip,knee};
 }
-const shield = makeEmojiSprite('🛡️'); shield.visible=false; shield.scale.set(0.9,0.9,1); shield.position.set(0.95,1.2,0.1);
-const sword = makeEmojiSprite('⚔️'); sword.visible=false; sword.scale.set(0.95,0.95,1); sword.position.set(1.05,1.2,0.1);
-const roarFx = makeEmojiSprite('💢'); roarFx.visible=false; roarFx.scale.set(0.8,0.8,1); roarFx.position.set(0.1,2.1,0);
-dogRoot.add(shield, sword, roarFx);
+const armL=makeArm(-1), armR=makeArm(1), legL=makeLeg(-1), legR=makeLeg(1);
 
-let shieldUntil=0, slashUntil=0, roarUntil=0;
-document.getElementById('btnShield').onclick=()=>shieldUntil=performance.now()+1000;
-document.getElementById('btnSlash').onclick=()=>slashUntil=performance.now()+560;
-document.getElementById('btnRoar').onclick=()=>roarUntil=performance.now()+700;
+// sword & shield as meshes
+const shield=new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.25,0.06,24),new THREE.MeshStandardMaterial({color:0x9cb8ff,metalness:.4,roughness:.35}));
+shield.rotation.z=Math.PI/2; shield.position.set(0.18,-0.38,0.02); armL.hand.add(shield);
+const swordGrp=new THREE.Group();
+const blade=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.62,0.02),new THREE.MeshStandardMaterial({color:0xdfe6ff,metalness:.8,roughness:.2})); blade.position.y=-0.35;
+const guard=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.03,0.05),new THREE.MeshStandardMaterial({color:0x7d8aa8,metalness:.7,roughness:.3}));
+const grip=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.18,8),new THREE.MeshStandardMaterial({color:0x5b4635})); grip.position.y=-0.05;
+swordGrp.add(blade,guard,grip); swordGrp.position.set(0,-0.40,0.02); armR.hand.add(swordGrp);
 
-// 虛擬搖桿
+// joystick
 const joy={active:false,id:null,bx:0,by:0,kx:0,ky:0,dx:0,dy:0,max:46};
-function setJoy(x,y){
-  const dx=x-joy.bx, dy=y-joy.by; const d=Math.hypot(dx,dy)||1; const c=Math.min(joy.max,d);
-  joy.kx=joy.bx+dx/d*c; joy.ky=joy.by+dy/d*c; joy.dx=(joy.kx-joy.bx)/joy.max; joy.dy=(joy.ky-joy.by)/joy.max;
-  ring.style.left=joy.bx+'px'; ring.style.top=joy.by+'px'; knob.style.left=joy.kx+'px'; knob.style.top=joy.ky+'px';
-}
-function down(e){ const p=e.touches?e.changedTouches[0]:e; joy.active=true; joy.id=p.identifier??'m'; joy.bx=p.clientX; joy.by=p.clientY; ring.style.display=knob.style.display='block'; setJoy(p.clientX,p.clientY); }
-function move(e){ if(!joy.active) return; if(e.touches){ for(const t of e.touches) if(t.identifier===joy.id) setJoy(t.clientX,t.clientY);} else setJoy(e.clientX,e.clientY); }
-function up(){ joy.active=false; joy.dx=joy.dy=0; ring.style.display=knob.style.display='none'; }
-renderer.domElement.addEventListener('pointerdown',down);
-renderer.domElement.addEventListener('pointermove',move);
-addEventListener('pointerup',up);
-renderer.domElement.addEventListener('touchstart',down,{passive:true});
-renderer.domElement.addEventListener('touchmove',move,{passive:true});
-addEventListener('touchend',up,{passive:true});
+function setJoy(x,y){const dx=x-joy.bx,dy=y-joy.by,d=Math.hypot(dx,dy)||1,c=Math.min(joy.max,d);joy.kx=joy.bx+dx/d*c;joy.ky=joy.by+dy/d*c;joy.dx=(joy.kx-joy.bx)/joy.max;joy.dy=(joy.ky-joy.by)/joy.max;ring.style.left=joy.bx+'px';ring.style.top=joy.by+'px';knob.style.left=joy.kx+'px';knob.style.top=joy.ky+'px';}
+function down(e){const p=e.touches?e.changedTouches[0]:e;joy.active=true;joy.id=p.identifier??'m';joy.bx=p.clientX;joy.by=p.clientY;ring.style.display=knob.style.display='block';setJoy(p.clientX,p.clientY);}
+function move(e){if(!joy.active)return;if(e.touches){for(const t of e.touches) if(t.identifier===joy.id) setJoy(t.clientX,t.clientY);} else setJoy(e.clientX,e.clientY);}
+function up(){joy.active=false;joy.dx=joy.dy=0;ring.style.display=knob.style.display='none';}
+renderer.domElement.addEventListener('pointerdown',down);renderer.domElement.addEventListener('pointermove',move);addEventListener('pointerup',up);
+renderer.domElement.addEventListener('touchstart',down,{passive:true});renderer.domElement.addEventListener('touchmove',move,{passive:true});addEventListener('touchend',up,{passive:true});
 
-btnCam.onclick = async ()=>{
-  try{
-    const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
-    video.srcObject=s;
-    await video.play();
-    btnCam.style.display='none';
-  }catch{ btnCam.textContent='相機不可用'; }
+// skills
+let shieldUntil=0, roarUntil=0, slashUntil=0;
+document.getElementById('btnShield').onclick=()=>shieldUntil=performance.now()+700;
+document.getElementById('btnRoar').onclick=()=>roarUntil=performance.now()+520;
+document.getElementById('btnSlash').onclick=()=>slashUntil=performance.now()+520;
+
+btnCam.onclick=async()=>{
+  try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});video.srcObject=s;await video.play();btnCam.style.display='none';}
+  catch{btnCam.textContent='相機不可用';}
 };
 
-let last = performance.now();
-let walk = 0;
+let last=performance.now(), walk=0;
+function anim(now){
+  const dt=Math.min(.033,(now-last)/1000); last=now;
+  const vx=joy.dx*3.0, vz=joy.dy*3.0; const moving=Math.hypot(vx,vz)>0.03;
 
-function animate(now){
-  const dt=Math.min(0.033,(now-last)/1000); last=now;
-  const moveSpeed=2.7;
-  const vx=joy.dx*moveSpeed;
-  const vz=joy.dy*moveSpeed;
-  const moving=Math.hypot(vx,vz)>0.04;
+  // full-screen movement area
+  root.position.x += vx*dt; root.position.z += vz*dt;
+  root.position.x = Math.max(-9, Math.min(9, root.position.x));
+  root.position.z = Math.max(-13, Math.min(13, root.position.z));
 
-  dogRoot.position.x += vx*dt;
-  dogRoot.position.z += vz*dt;
-  dogRoot.position.x = Math.max(-3.8, Math.min(3.8, dogRoot.position.x));
-  dogRoot.position.z = Math.max(-2.8, Math.min(2.8, dogRoot.position.z));
+  // movement facing
+  if(Math.abs(vx)>0.05){ root.rotation.y = vx>0 ? -0.22 : 0.22; }
+  else root.rotation.y *= 0.85;
 
-  // 角色朝向（左右）
-  if (Math.abs(vx) > 0.05) dogRoot.rotation.y = vx > 0 ? -0.2 : 0.2;
-  else dogRoot.rotation.y *= 0.86;
+  walk += dt*(moving?9:2.5);
+  const s1=Math.sin(walk), s2=Math.sin(walk+Math.PI);
 
-  walk += dt * (moving ? 9.5 : 2.5);
-  const stride = moving ? Math.sin(walk) : 0;
-  const stride2 = moving ? Math.sin(walk + Math.PI) : 0;
+  // leg gait
+  legL.hip.rotation.x = s1*0.7; legL.knee.rotation.x = Math.max(0,-s1)*0.8;
+  legR.hip.rotation.x = s2*0.7; legR.knee.rotation.x = Math.max(0,-s2)*0.8;
 
-  // 骨架（節點）動畫：對角步態
-  legFL.hip.rotation.x = stride * 0.65;
-  legFL.knee.rotation.x = Math.max(0, -stride) * 0.7;
+  // idle/move bounce
+  root.position.y = moving ? Math.sin(walk*2)*0.03 : Math.sin(walk*0.7)*0.02;
 
-  legBR.hip.rotation.x = stride * 0.65;
-  legBR.knee.rotation.x = Math.max(0, -stride) * 0.7;
+  // default arm swing when moving
+  armL.shoulder.rotation.x = moving ? s2*0.35 : 0;
+  armR.shoulder.rotation.x = moving ? s1*0.35 : 0;
+  armL.elbow.rotation.x = 0; armR.elbow.rotation.x = 0;
+  headPivot.rotation.x = 0;
 
-  legFR.hip.rotation.x = stride2 * 0.65;
-  legFR.knee.rotation.x = Math.max(0, -stride2) * 0.7;
+  const t=performance.now();
 
-  legBL.hip.rotation.x = stride2 * 0.65;
-  legBL.knee.rotation.x = Math.max(0, -stride2) * 0.7;
-
-  // 前後移動的姿態差
-  if (vz > 0.08) {
-    torso.rotation.x = -0.12;
-    neck.rotation.x = 0.08;
-  } else if (vz < -0.08) {
-    torso.rotation.x = 0.09;
-    neck.rotation.x = -0.06;
+  // shield pose: raise left arm + shield in front
+  if(t<shieldUntil){
+    armL.shoulder.rotation.x = -1.1;
+    armL.shoulder.rotation.z = -0.35;
+    armL.elbow.rotation.x = -0.35;
+    shield.rotation.y = 0.55;
   } else {
-    torso.rotation.x *= 0.85;
-    neck.rotation.x *= 0.85;
+    shield.rotation.y = 0;
   }
 
-  // 呼吸/上下律動
-  dogRoot.position.y = moving ? Math.sin(walk*2) * 0.03 : Math.sin(walk*0.6) * 0.02;
-  tailBase.rotation.z = Math.sin(walk*2.2) * 0.25;
-
-  const t = performance.now();
-  shield.visible = t < shieldUntil;
-  sword.visible = t < slashUntil;
-  roarFx.visible = t < roarUntil;
-
-  if (sword.visible){
-    const p = 1 - (slashUntil - t) / 560;
-    sword.material.rotation = -0.9 + p * 1.8;
+  // roar pose: head back + both arms spread + body up
+  if(t<roarUntil){
+    const p=1-(roarUntil-t)/520;
+    headPivot.rotation.x = -0.45;
+    armL.shoulder.rotation.z = -0.7; armR.shoulder.rotation.z = 0.7;
+    armL.shoulder.rotation.x = -0.5; armR.shoulder.rotation.x = -0.5;
+    root.position.y += Math.sin(p*Math.PI)*0.08;
   }
 
-  renderer.render(scene, camera);
-  requestAnimationFrame(animate);
+  // slash pose: right arm swings down
+  if(t<slashUntil){
+    const p=1-(slashUntil-t)/520;
+    const angle = -1.3 + p*2.2; // from back to front slash
+    armR.shoulder.rotation.x = angle;
+    armR.shoulder.rotation.z = 0.25;
+    armR.elbow.rotation.x = -0.25;
+    swordGrp.rotation.z = -0.5 + p*1.2;
+  } else {
+    swordGrp.rotation.z = 0;
+  }
+
+  renderer.render(scene,camera);
+  requestAnimationFrame(anim);
 }
-requestAnimationFrame(animate);
+requestAnimationFrame(anim);
 
-addEventListener('resize', ()=>{
-  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 </script>
 </body>
 </html>
