@@ -40,6 +40,7 @@ const knob=document.getElementById('knob');
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,200);
 camera.position.set(0,3.4,8);
+camera.lookAt(0,1.4,0);
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
 renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x000000,0);
 document.getElementById('app').appendChild(renderer.domElement);
@@ -105,21 +106,24 @@ btnCam.onclick=async()=>{
 };
 
 let last=performance.now(), walk=0;
-const camTarget = new THREE.Vector3(0,1.2,0);
 
 function anim(now){
   const dt=Math.min(.033,(now-last)/1000); last=now;
   const vx=joy.dx*4.5, vz=joy.dy*4.5; // faster movement
   const moving=Math.hypot(vx,vz)>0.03;
 
+  // world movement (true third-person, not in-place)
   root.position.x += vx*dt;
   root.position.z += vz*dt;
 
-  // camera follow => effectively full-screen movement without bounds
-  camTarget.set(root.position.x, 1.4, root.position.z);
-  const desired = new THREE.Vector3(root.position.x, 3.4, root.position.z + 8.0);
-  camera.position.lerp(desired, 0.08);
-  camera.lookAt(camTarget);
+  // keep character inside current screen view
+  const depth = Math.max(1.2, camera.position.z - root.position.z);
+  const halfH = Math.tan((camera.fov * Math.PI / 180) * 0.5) * depth;
+  const halfW = halfH * camera.aspect;
+  const pad = 0.75; // character body padding
+  const maxX = Math.max(pad, halfW - pad);
+  root.position.x = Math.max(-maxX, Math.min(maxX, root.position.x));
+  root.position.z = Math.max(-8.0, Math.min(3.2, root.position.z));
 
   // face movement direction (full 360)
   if (moving) {
@@ -196,7 +200,7 @@ function anim(now){
 }
 requestAnimationFrame(anim);
 
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();camera.lookAt(0,1.4,0);renderer.setSize(innerWidth,innerHeight);});
 </script>
 </body>
 </html>
