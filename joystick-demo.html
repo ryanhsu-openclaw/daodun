@@ -82,7 +82,7 @@
   }
 
   function drawActor(now){
-    const s=1.35-actor.z*0.8; // near bigger
+    const s = 2.2 * (1 - actor.z) + 0.35; // stronger near/far scaling
     const x=actor.x*innerWidth;
     const y=actor.y*innerHeight;
 
@@ -187,12 +187,12 @@
 
     // filter-style full-screen movement
     actor.x += joy.dx*0.52*dt;
-    actor.y += joy.dy*0.42*dt;
-    actor.z += joy.dy*0.22*dt;
+    actor.y += joy.dy * 0.28 * dt;
+    actor.z += joy.dy * 0.55 * dt;
 
     actor.x = Math.max(0.08, Math.min(0.92, actor.x));
     actor.y = Math.max(0.40, Math.min(0.88, actor.y));
-    actor.z = Math.max(0.02, Math.min(0.70, actor.z));
+    actor.z = Math.max(0.02, Math.min(0.98, actor.z));
 
     if(Math.abs(joy.dx)>0.06) actor.dir = Math.sign(joy.dx);
 
