@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>我的刀盾 3D 角色</title>
+  <title>我的刀盾 濾鏡版</title>
   <style>
     html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:system-ui,sans-serif}
-    #cam{position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:1;background:#000}
-    #app{position:fixed;inset:0;z-index:2}
+    #cam{position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;background:#000;z-index:1}
+    #fx{position:fixed;inset:0;z-index:2}
     #ui{position:fixed;inset:0;pointer-events:none;z-index:3}
     .btns{position:absolute;right:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:14px;pointer-events:auto}
     .skill{width:68px;height:68px;border:0;border-radius:18px;background:rgba(255,255,255,.18);backdrop-filter:blur(4px);color:#fff;font-size:28px;box-shadow:0 8px 24px rgba(0,0,0,.26),inset 0 0 0 1px rgba(255,255,255,.22)}
@@ -18,7 +18,7 @@
 </head>
 <body>
   <video id="cam" autoplay playsinline muted></video>
-  <div id="app"></div>
+  <canvas id="fx"></canvas>
   <div id="ui">
     <div class="btns">
       <button class="skill" id="btnShield">🛡️</button>
@@ -29,178 +29,192 @@
   </div>
   <div id="joy"><div class="ring" id="ring"></div><div class="knob" id="knob"></div></div>
 
-<script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+<script>
+(() => {
+  const video=document.getElementById('cam');
+  const canvas=document.getElementById('fx');
+  const ctx=canvas.getContext('2d');
+  const btnCam=document.getElementById('btnCam');
+  const ring=document.getElementById('ring');
+  const knob=document.getElementById('knob');
 
-const video=document.getElementById('cam');
-const btnCam=document.getElementById('btnCam');
-const ring=document.getElementById('ring');
-const knob=document.getElementById('knob');
+  const actor={x:0.5,y:0.72,z:0.25,dir:1,walk:0}; // normalized screen coords
+  const joy={active:false,id:null,bx:0,by:0,kx:0,ky:0,dx:0,dy:0,max:46};
+  let shieldUntil=0,roarUntil=0,slashUntil=0;
+  let shake=0,flash=0;
 
-const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,200);
-camera.position.set(0,3.4,8);
-camera.lookAt(0,1.4,0);
-const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
-renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x000000,0);
-document.getElementById('app').appendChild(renderer.domElement);
+  function resize(){
+    canvas.width=innerWidth*devicePixelRatio;
+    canvas.height=innerHeight*devicePixelRatio;
+    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  }
+  addEventListener('resize',resize);resize();
 
-scene.add(new THREE.HemisphereLight(0xffffff,0x345,1.05));
-const dl=new THREE.DirectionalLight(0xffffff,.95);dl.position.set(4,8,6);scene.add(dl);
+  btnCam.onclick=async()=>{
+    try{
+      const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+      video.srcObject=s; await video.play(); btnCam.style.display='none';
+    }catch{btnCam.textContent='相機不可用';}
+  };
 
-// no black circle range
+  function setJoy(x,y){
+    const dx=x-joy.bx,dy=y-joy.by,d=Math.hypot(dx,dy)||1,c=Math.min(joy.max,d);
+    joy.kx=joy.bx+dx/d*c; joy.ky=joy.by+dy/d*c;
+    joy.dx=(joy.kx-joy.bx)/joy.max; joy.dy=(joy.ky-joy.by)/joy.max;
+    ring.style.left=joy.bx+'px'; ring.style.top=joy.by+'px';
+    knob.style.left=joy.kx+'px'; knob.style.top=joy.ky+'px';
+  }
+  function down(e){const p=e.touches?e.changedTouches[0]:e;joy.active=true;joy.id=p.identifier??'m';joy.bx=p.clientX;joy.by=p.clientY;ring.style.display=knob.style.display='block';setJoy(p.clientX,p.clientY)}
+  function move(e){if(!joy.active)return;if(e.touches){for(const t of e.touches) if(t.identifier===joy.id) setJoy(t.clientX,t.clientY)} else setJoy(e.clientX,e.clientY)}
+  function up(){joy.active=false;joy.dx=joy.dy=0;ring.style.display=knob.style.display='none'}
+  canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);addEventListener('pointerup',up);
+  canvas.addEventListener('touchstart',down,{passive:true});canvas.addEventListener('touchmove',move,{passive:true});addEventListener('touchend',up,{passive:true});
 
-const root=new THREE.Group();scene.add(root);root.position.set(0,0,0);
-const skin=new THREE.MeshStandardMaterial({color:0xffd7b0,roughness:.75});
-const cloth=new THREE.MeshStandardMaterial({color:0x6aa0ff,roughness:.7});
-const dark=new THREE.MeshStandardMaterial({color:0x30343c,roughness:.8});
+  document.getElementById('btnShield').onclick=()=>{shieldUntil=performance.now()+950; shake=8;};
+  document.getElementById('btnRoar').onclick=()=>{roarUntil=performance.now()+820; shake=12;};
+  document.getElementById('btnSlash').onclick=()=>{slashUntil=performance.now()+760; flash=1; shake=14;};
 
-const body=new THREE.Mesh(new THREE.CapsuleGeometry(0.42,0.7,6,12),cloth); body.position.y=1.2; root.add(body);
-const headPivot=new THREE.Group(); headPivot.position.set(0,1.85,0); root.add(headPivot);
-const head=new THREE.Mesh(new THREE.SphereGeometry(0.34,24,24),skin); head.position.y=0.02; headPivot.add(head);
-const eyeL=new THREE.Mesh(new THREE.SphereGeometry(0.03,10,10),dark); eyeL.position.set(-0.10,0.03,0.30); headPivot.add(eyeL);
-const eyeR=eyeL.clone(); eyeR.position.x=0.10; headPivot.add(eyeR);
-
-function makeArm(side){
-  const shoulder=new THREE.Group(); shoulder.position.set(0.5*side,1.55,0); root.add(shoulder);
-  const upper=new THREE.Mesh(new THREE.CapsuleGeometry(0.09,0.35,4,8),cloth); upper.rotation.z=0.08*side; upper.position.y=-0.23; shoulder.add(upper);
-  const elbow=new THREE.Group(); elbow.position.y=-0.45; shoulder.add(elbow);
-  const lower=new THREE.Mesh(new THREE.CapsuleGeometry(0.08,0.32,4,8),skin); lower.position.y=-0.20; elbow.add(lower);
-  const hand=new THREE.Mesh(new THREE.SphereGeometry(0.10,12,12),skin); hand.position.y=-0.42; elbow.add(hand);
-  return {shoulder,elbow,hand};
-}
-function makeLeg(side){
-  const hip=new THREE.Group(); hip.position.set(0.22*side,0.85,0); root.add(hip);
-  const upper=new THREE.Mesh(new THREE.CapsuleGeometry(0.11,0.42,4,8),dark); upper.position.y=-0.28; hip.add(upper);
-  const knee=new THREE.Group(); knee.position.y=-0.52; hip.add(knee);
-  const lower=new THREE.Mesh(new THREE.CapsuleGeometry(0.10,0.42,4,8),dark); lower.position.y=-0.25; knee.add(lower);
-  const foot=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.08,0.32),dark); foot.position.set(0,-0.50,0.08); knee.add(foot);
-  return {hip,knee};
-}
-const armL=makeArm(-1), armR=makeArm(1), legL=makeLeg(-1), legR=makeLeg(1);
-
-const shield=new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.25,0.06,24),new THREE.MeshStandardMaterial({color:0x9cb8ff,metalness:.4,roughness:.35}));
-shield.rotation.z=Math.PI/2; shield.position.set(0.18,-0.38,0.02); armL.hand.add(shield);
-const swordGrp=new THREE.Group();
-const blade=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.72,0.02),new THREE.MeshStandardMaterial({color:0xdfe6ff,metalness:.8,roughness:.2})); blade.position.y=-0.40;
-const guard=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.04,0.05),new THREE.MeshStandardMaterial({color:0x7d8aa8,metalness:.7,roughness:.3}));
-const grip=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.18,8),new THREE.MeshStandardMaterial({color:0x5b4635})); grip.position.y=-0.05;
-swordGrp.add(blade,guard,grip); swordGrp.position.set(0,-0.40,0.02); armR.hand.add(swordGrp);
-
-const joy={active:false,id:null,bx:0,by:0,kx:0,ky:0,dx:0,dy:0,max:46};
-function setJoy(x,y){const dx=x-joy.bx,dy=y-joy.by,d=Math.hypot(dx,dy)||1,c=Math.min(joy.max,d);joy.kx=joy.bx+dx/d*c;joy.ky=joy.by+dy/d*c;joy.dx=(joy.kx-joy.bx)/joy.max;joy.dy=(joy.ky-joy.by)/joy.max;ring.style.left=joy.bx+'px';ring.style.top=joy.by+'px';knob.style.left=joy.kx+'px';knob.style.top=joy.ky+'px';}
-function down(e){const p=e.touches?e.changedTouches[0]:e;joy.active=true;joy.id=p.identifier??'m';joy.bx=p.clientX;joy.by=p.clientY;ring.style.display=knob.style.display='block';setJoy(p.clientX,p.clientY);}
-function move(e){if(!joy.active)return;if(e.touches){for(const t of e.touches) if(t.identifier===joy.id) setJoy(t.clientX,t.clientY);} else setJoy(e.clientX,e.clientY);}
-function up(){joy.active=false;joy.dx=joy.dy=0;ring.style.display=knob.style.display='none';}
-renderer.domElement.addEventListener('pointerdown',down);renderer.domElement.addEventListener('pointermove',move);addEventListener('pointerup',up);
-renderer.domElement.addEventListener('touchstart',down,{passive:true});renderer.domElement.addEventListener('touchmove',move,{passive:true});addEventListener('touchend',up,{passive:true});
-
-let shieldUntil=0, roarUntil=0, slashUntil=0;
-document.getElementById('btnShield').onclick=()=>shieldUntil=performance.now()+900;
-document.getElementById('btnRoar').onclick=()=>roarUntil=performance.now()+700;
-document.getElementById('btnSlash').onclick=()=>slashUntil=performance.now()+680;
-
-btnCam.onclick=async()=>{
-  try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});video.srcObject=s;await video.play();btnCam.style.display='none';}
-  catch{btnCam.textContent='相機不可用';}
-};
-
-let last=performance.now(), walk=0;
-
-function anim(now){
-  const dt=Math.min(.033,(now-last)/1000); last=now;
-  const vx=joy.dx*4.5, vz=joy.dy*4.5; // faster movement
-  const moving=Math.hypot(vx,vz)>0.03;
-
-  // world movement (true third-person, not in-place)
-  root.position.x += vx*dt;
-  root.position.z += vz*dt;
-
-  // keep character inside current screen view
-  const depth = Math.max(1.2, camera.position.z - root.position.z);
-  const halfH = Math.tan((camera.fov * Math.PI / 180) * 0.5) * depth;
-  const halfW = halfH * camera.aspect;
-  const pad = 0.75; // character body padding
-  const maxX = Math.max(pad, halfW - pad);
-  root.position.x = Math.max(-maxX, Math.min(maxX, root.position.x));
-  root.position.z = Math.max(-8.0, Math.min(3.2, root.position.z));
-
-  // face movement direction (full 360)
-  if (moving) {
-    const angle = Math.atan2(vx, vz); // x/z
-    root.rotation.y = THREE.MathUtils.lerp(root.rotation.y, angle, 0.22);
+  function limb(x,y,len,ang,w,color){
+    const ex=x+Math.cos(ang)*len, ey=y+Math.sin(ang)*len;
+    ctx.lineWidth=w; ctx.strokeStyle=color; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(ex,ey); ctx.stroke();
+    return [ex,ey];
   }
 
-  walk += dt*(moving?11:2.4);
-  const s1=Math.sin(walk), s2=Math.sin(walk+Math.PI);
+  function drawActor(now){
+    const s=1.35-actor.z*0.8; // near bigger
+    const x=actor.x*innerWidth;
+    const y=actor.y*innerHeight;
 
-  // exaggerated walk cycle
-  legL.hip.rotation.x = s1*0.95; legL.knee.rotation.x = Math.max(0,-s1)*1.05;
-  legR.hip.rotation.x = s2*0.95; legR.knee.rotation.x = Math.max(0,-s2)*1.05;
-  armL.shoulder.rotation.x = moving ? s2*0.65 : 0;
-  armR.shoulder.rotation.x = moving ? s1*0.65 : 0;
+    const moving=Math.hypot(joy.dx,joy.dy)>0.08;
+    actor.walk += moving?0.34:0.1;
+    const bob=(moving?Math.sin(actor.walk)*7:Math.sin(actor.walk*.5)*2)*s;
 
-  root.position.y = moving ? Math.sin(walk*2)*0.05 : Math.sin(walk*0.7)*0.02;
+    const torsoH=96*s, torsoW=60*s, headR=29*s;
+    const hipY=y-56*s+bob, chestY=hipY-torsoH*.55;
 
-  // reset baseline
-  armL.elbow.rotation.set(0,0,0);
-  armR.elbow.rotation.set(0,0,0);
-  armL.shoulder.rotation.z = 0;
-  armR.shoulder.rotation.z = 0;
-  headPivot.rotation.x = 0;
-  body.rotation.x = 0;
+    let lArm=-1.05,rArm=-1.05,lFore=.25,rFore=.25,lLeg=1.6,rLeg=1.6,lShin=1.2,rShin=1.2,bodyTilt=0,headTilt=0;
+    if(moving){
+      const a=Math.sin(actor.walk), b=Math.sin(actor.walk+Math.PI);
+      lArm=-1.0+b*0.75; rArm=-1.0+a*0.75;
+      lLeg=1.58+a*0.95; rLeg=1.58+b*0.95;
+      lShin=1.1+Math.max(0,-a)*1.05; rShin=1.1+Math.max(0,-b)*1.05;
+      bodyTilt = joy.dy>0.06 ? -0.2 : joy.dy<-0.06 ? 0.16 : 0;
+      headTilt = -bodyTilt*0.45;
+    }
 
-  const t=performance.now();
+    const t=performance.now();
+    if(t<shieldUntil){
+      const p=1-(shieldUntil-t)/950;
+      lArm=-2.1+p*0.2; lFore=-1.9; bodyTilt=-0.34; headTilt=0.12;
+    }
+    if(t<roarUntil){
+      const p=1-(roarUntil-t)/820;
+      const burst=Math.sin(p*Math.PI);
+      lArm=-2.35; rArm=-2.35; lFore=-0.45; rFore=-0.45;
+      bodyTilt=-0.38; headTilt=-0.62;
+      ctx.strokeStyle=`rgba(255,180,80,${1-p})`; ctx.lineWidth=7*(1-p)+1;
+      ctx.beginPath(); ctx.arc(x, chestY-65*s, 38*s+p*150*s, 0, Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, chestY-65*s, 24*s+p*90*s, 0, Math.PI*2); ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,.96)'; ctx.font=`${36*s}px system-ui`; ctx.textAlign='center';
+      ctx.fillText('啊啊啊！！', x, chestY-112*s-burst*20*s);
+    }
+    if(t<slashUntil){
+      const p=1-(slashUntil-t)/760;
+      rArm=-2.5+p*3.5; rFore=-1.6+p*2.2; bodyTilt=-0.5+p*0.58;
+      ctx.save();
+      ctx.translate(x+40*s*actor.dir, chestY+5*s);
+      ctx.scale(actor.dir,1);
+      ctx.rotate(-2.3+p*3.2);
+      const g=ctx.createLinearGradient(0,-10*s,160*s,10*s);
+      g.addColorStop(0,'rgba(255,255,255,0)');
+      g.addColorStop(.5,'rgba(170,220,255,.95)');
+      g.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=g; ctx.fillRect(0,-10*s,170*s,20*s);
+      ctx.restore();
+    }
 
-  // SHIELD (big defensive pose)
-  if(t<shieldUntil){
-    const p = 1 - (shieldUntil - t)/900;
-    armL.shoulder.rotation.x = -1.55 + p*0.2;
-    armL.shoulder.rotation.z = -0.95;
-    armL.elbow.rotation.x = -1.2;
-    body.rotation.x = -0.2;
-    shield.rotation.y = 1.25;
-    shield.scale.setScalar(1.18);
-  } else {
-    shield.rotation.y = 0;
-    shield.scale.setScalar(1);
+    // shadow
+    ctx.fillStyle='rgba(0,0,0,.28)';
+    ctx.beginPath(); ctx.ellipse(x,y+16*s,44*s,15*s,0,0,Math.PI*2); ctx.fill();
+
+    ctx.save();
+    ctx.translate(x,hipY);
+    ctx.scale(actor.dir,1);
+    ctx.rotate(bodyTilt);
+
+    ctx.fillStyle='#6aa0ff';
+    ctx.beginPath(); ctx.roundRect(-torsoW/2,-torsoH,torsoW,torsoH,16*s); ctx.fill();
+
+    ctx.save();
+    ctx.translate(0,-torsoH-headR*.35); ctx.rotate(headTilt);
+    ctx.fillStyle='#ffd7b0'; ctx.beginPath(); ctx.arc(0,0,headR,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(-headR*.32,-headR*.08,headR*.09,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(headR*.32,-headR*.08,headR*.09,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    const shY=-torsoH*.75, shX=torsoW*.55;
+    const [lhx,lhy]=limb(-shX,shY,46*s,lArm,12*s,'#6aa0ff');
+    const [lh2x,lh2y]=limb(lhx,lhy,42*s,lArm+lFore,11*s,'#ffd7b0');
+    const [rhx,rhy]=limb(shX,shY,46*s,rArm,12*s,'#6aa0ff');
+    const [rh2x,rh2y]=limb(rhx,rhy,42*s,rArm+rFore,11*s,'#ffd7b0');
+
+    // shield
+    ctx.save();
+    ctx.translate(lh2x,lh2y); ctx.rotate(lArm+lFore+(t<shieldUntil?1.35:0.2));
+    ctx.fillStyle='#9cb8ff'; ctx.beginPath(); ctx.ellipse(0,0,20*s,26*s,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.8)'; ctx.lineWidth=3*s; ctx.stroke();
+    ctx.restore();
+
+    // sword
+    ctx.save();
+    ctx.translate(rh2x,rh2y); ctx.rotate(rArm+rFore-0.18);
+    ctx.fillStyle='#c3d0e8'; ctx.fillRect(-2*s,-48*s,4*s,58*s);
+    ctx.fillStyle='#6f7f99'; ctx.fillRect(-10*s,8*s,20*s,4*s);
+    ctx.fillStyle='#5a4637'; ctx.fillRect(-2.5*s,11*s,5*s,12*s);
+    ctx.restore();
+
+    const hipOff=torsoW*.24;
+    const [lkx,lky]=limb(-hipOff,0,50*s,lLeg,13*s,'#3a3f49'); limb(lkx,lky,45*s,lLeg+lShin,12*s,'#30343c');
+    const [rkx,rky]=limb(hipOff,0,50*s,rLeg,13*s,'#3a3f49'); limb(rkx,rky,45*s,rLeg+rShin,12*s,'#30343c');
+
+    ctx.restore();
   }
 
-  // ROAR (big scream pose)
-  if(t<roarUntil){
-    const p=1-(roarUntil-t)/700;
-    const pulse = Math.sin(p*Math.PI)*0.25;
-    headPivot.rotation.x = -0.95;
-    armL.shoulder.rotation.z = -1.25;
-    armR.shoulder.rotation.z = 1.25;
-    armL.shoulder.rotation.x = -1.0;
-    armR.shoulder.rotation.x = -1.0;
-    body.rotation.x = -0.32;
-    root.position.y += pulse*0.22;
+  let last=performance.now();
+  function loop(now){
+    const dt=Math.min(.033,(now-last)/1000); last=now;
+
+    // filter-style full-screen movement
+    actor.x += joy.dx*0.52*dt;
+    actor.y += joy.dy*0.42*dt;
+    actor.z += joy.dy*0.22*dt;
+
+    actor.x = Math.max(0.08, Math.min(0.92, actor.x));
+    actor.y = Math.max(0.40, Math.min(0.88, actor.y));
+    actor.z = Math.max(0.02, Math.min(0.70, actor.z));
+
+    if(Math.abs(joy.dx)>0.06) actor.dir = Math.sign(joy.dx);
+
+    if(shake>0){ shake*=0.86; }
+    const sx=(Math.random()-.5)*shake;
+    const sy=(Math.random()-.5)*shake;
+
+    ctx.save();
+    ctx.translate(sx,sy);
+    ctx.clearRect(-sx,-sy,innerWidth,innerHeight);
+    drawActor(now);
+    if(flash>0){
+      flash*=0.8;
+      ctx.fillStyle=`rgba(255,255,255,${Math.min(0.35,flash)})`;
+      ctx.fillRect(-sx,-sy,innerWidth,innerHeight);
+    }
+    ctx.restore();
+
+    requestAnimationFrame(loop);
   }
-
-  // SLASH (big sword swing)
-  if(t<slashUntil){
-    const p=1-(slashUntil-t)/680;
-    const angle = -2.1 + p*3.2;
-    armR.shoulder.rotation.x = angle;
-    armR.shoulder.rotation.z = 0.78;
-    armR.elbow.rotation.x = -1.1;
-    body.rotation.y = Math.sin(p*Math.PI)*0.22;
-    swordGrp.rotation.z = -1.4 + p*2.3;
-    swordGrp.position.x = 0.12;
-  } else {
-    swordGrp.rotation.z = 0;
-    swordGrp.position.x = 0;
-    body.rotation.y *= 0.84;
-  }
-
-  renderer.render(scene,camera);
-  requestAnimationFrame(anim);
-}
-requestAnimationFrame(anim);
-
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();camera.lookAt(0,1.4,0);renderer.setSize(innerWidth,innerHeight);});
+  requestAnimationFrame(loop);
+})();
 </script>
 </body>
 </html>
