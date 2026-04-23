@@ -38,12 +38,12 @@
   const ring=document.getElementById('ring');
   const knob=document.getElementById('knob');
 
-  const actor={x:0.5,y:0.5,z:0.96,dir:1,walk:0}; // normalized screen coords
+  const actor={x:0.5,y:0.5,z:0.82,dir:1,walk:0}; // normalized screen coords
   const joy={active:false,id:null,bx:0,by:0,kx:0,ky:0,dx:0,dy:0,max:46};
   let shieldUntil=0,roarUntil=0,slashUntil=0;
 
   function hardCenter(){
-    actor.x=0.5; actor.y=0.5; actor.z=0.96;
+    actor.x=0.5; actor.y=0.5; actor.z=0.82;
     joy.dx=0; joy.dy=0;
   }
   let shake=0,flash=0;
@@ -89,6 +89,11 @@ resize();
 
   function drawActor(now){
     const s = 0.50 - actor.z * 0.20; // three more steps smaller
+    // dynamic bounds: allow full-screen roam while keeping whole character visible
+    const padX = Math.max(26, 72 * s);
+    const padY = Math.max(36, 120 * s);
+    actor.x = Math.max(padX / innerWidth, Math.min(1 - padX / innerWidth, actor.x));
+    actor.y = Math.max(padY / innerHeight, Math.min(1 - padY / innerHeight, actor.y));
     const x=actor.x*innerWidth;
     const y=actor.y*innerHeight;
 
@@ -195,7 +200,7 @@ resize();
     const dt=Math.min(.033,(now-last)/1000); last=now;
 
     if(!booted){
-      actor.x=0.5; actor.y=0.5; actor.z=0.96;
+      actor.x=0.5; actor.y=0.5; actor.z=0.82;
       joy.dx=0; joy.dy=0;
       booted=true;
     }
@@ -206,8 +211,6 @@ resize();
     actor.y += joy.dy * 0.28 * dt;
     actor.z += joy.dy * 0.55 * dt;
 
-    actor.x = Math.max(0.22, Math.min(0.78, actor.x));
-    actor.y = Math.max(0.30, Math.min(0.70, actor.y));
     actor.z = Math.max(0.60, Math.min(0.995, actor.z));
 
     if(Math.abs(joy.dx)>0.06) actor.dir = Math.sign(joy.dx);
@@ -220,6 +223,11 @@ resize();
     ctx.translate(sx,sy);
     ctx.clearRect(-sx,-sy,innerWidth,innerHeight);
     drawActor(now);
+    // center marker (very light) to align expected screen center
+    ctx.strokeStyle='rgba(255,255,255,.22)';
+    ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(innerWidth*0.5-10, innerHeight*0.5); ctx.lineTo(innerWidth*0.5+10, innerHeight*0.5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(innerWidth*0.5, innerHeight*0.5-10); ctx.lineTo(innerWidth*0.5, innerHeight*0.5+10); ctx.stroke();
     if(flash>0){
       flash*=0.8;
       ctx.fillStyle=`rgba(255,255,255,${Math.min(0.35,flash)})`;
