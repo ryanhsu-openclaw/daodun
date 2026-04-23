@@ -40,6 +40,8 @@
 
   const actor={x:0.5,y:0.5,z:0.82,dir:1,walk:0}; // normalized screen coords
   const joy={active:false,id:null,bx:0,by:0,kx:0,ky:0,dx:0,dy:0,max:46};
+  let viewportW = innerWidth;
+  let viewportH = innerHeight;
   let shieldUntil=0,roarUntil=0,slashUntil=0;
 
   function hardCenter(){
@@ -53,7 +55,7 @@
     canvas.height=innerHeight*devicePixelRatio;
     ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
   }
-  addEventListener('resize',()=>{ resize(); hardCenter(); centerFrames=12; });
+  addEventListener('resize',()=>{ resize(); const vv=window.visualViewport; viewportW=Math.round((vv&&vv.width)||canvas.clientWidth||innerWidth); viewportH=Math.round((vv&&vv.height)||canvas.clientHeight||innerHeight); hardCenter(); centerFrames=16; });
 resize();
 
   btnCam.onclick=async()=>{
@@ -90,12 +92,12 @@ resize();
   function drawActor(now){
     const s = 0.50 - actor.z * 0.20; // three more steps smaller
     // dynamic bounds: allow full-screen roam while keeping whole character visible
-    const padX = Math.max(26, 72 * s);
-    const padY = Math.max(36, 120 * s);
-    actor.x = Math.max(padX / innerWidth, Math.min(1 - padX / innerWidth, actor.x));
-    actor.y = Math.max(padY / innerHeight, Math.min(1 - padY / innerHeight, actor.y));
-    const x=actor.x*innerWidth;
-    const y=actor.y*innerHeight;
+    const padX = Math.max(26, 88 * s);
+    const padY = Math.max(42, 150 * s);
+    actor.x = Math.max(padX / viewportW, Math.min(1 - padX / viewportW, actor.x));
+    actor.y = Math.max(padY / viewportH, Math.min(1 - padY / viewportH, actor.y));
+    const x=actor.x*viewportW;
+    const y=actor.y*viewportH;
 
     const moving=Math.hypot(joy.dx,joy.dy)>0.08;
     actor.walk += moving?0.34:0.1;
@@ -199,6 +201,10 @@ resize();
   function loop(now){
     const dt=Math.min(.033,(now-last)/1000); last=now;
 
+    const vv = window.visualViewport;
+    viewportW = Math.round((vv && vv.width) || canvas.clientWidth || innerWidth);
+    viewportH = Math.round((vv && vv.height) || canvas.clientHeight || innerHeight);
+
     if(!booted){
       actor.x=0.5; actor.y=0.5; actor.z=0.82;
       joy.dx=0; joy.dy=0;
@@ -224,10 +230,10 @@ resize();
     ctx.clearRect(-sx,-sy,innerWidth,innerHeight);
     drawActor(now);
     // center marker (very light) to align expected screen center
-    ctx.strokeStyle='rgba(255,255,255,.22)';
-    ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(innerWidth*0.5-10, innerHeight*0.5); ctx.lineTo(innerWidth*0.5+10, innerHeight*0.5); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(innerWidth*0.5, innerHeight*0.5-10); ctx.lineTo(innerWidth*0.5, innerHeight*0.5+10); ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.45)';
+    ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(viewportW*0.5-14, viewportH*0.5); ctx.lineTo(viewportW*0.5+14, viewportH*0.5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(viewportW*0.5, viewportH*0.5-14); ctx.lineTo(viewportW*0.5, viewportH*0.5+14); ctx.stroke();
     if(flash>0){
       flash*=0.8;
       ctx.fillStyle=`rgba(255,255,255,${Math.min(0.35,flash)})`;
