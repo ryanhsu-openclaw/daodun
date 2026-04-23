@@ -3,328 +3,225 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>我的刀盾 Demo</title>
+  <title>我的刀盾 3D 狗狗</title>
   <style>
-    html, body { margin: 0; height: 100%; background: #111; overflow: hidden; font-family: system-ui, sans-serif; }
-    #wrap { position: fixed; inset: 0; }
-    #bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.72); }
-    #fx { position: absolute; inset: 0; width: 100%; height: 100%; }
-    .ui { position: absolute; inset: 0; pointer-events: none; }
-
-    .btns {
-      position: absolute;
-      right: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      pointer-events: auto;
-    }
-
-    .skill {
-      width: 68px;
-      height: 68px;
-      border: 0;
-      border-radius: 18px;
-      background: rgba(255,255,255,.18);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      box-shadow: 0 8px 24px rgba(0,0,0,.26), inset 0 0 0 1px rgba(255,255,255,.22);
-      color: #fff;
-      font-size: 28px;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
-      transition: transform .08s ease;
-    }
-    .skill:active { transform: scale(.95); }
-
-    #btnCam {
-      position: absolute;
-      left: 14px;
-      bottom: 14px;
-      pointer-events: auto;
-      background: rgba(32,32,32,.9);
-      color: #fff;
-      border: 0;
-      border-radius: 12px;
-      padding: 10px 14px;
-      font-weight: 700;
-    }
+    html,body { margin:0; height:100%; overflow:hidden; background:#111; font-family:system-ui,sans-serif; }
+    #app { position:fixed; inset:0; }
+    #ui { position:fixed; inset:0; pointer-events:none; }
+    .btns { position:absolute; right:16px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:14px; pointer-events:auto; }
+    .skill { width:68px; height:68px; border:0; border-radius:18px; background:rgba(255,255,255,.18); backdrop-filter: blur(4px); color:#fff; font-size:28px; box-shadow:0 8px 24px rgba(0,0,0,.26), inset 0 0 0 1px rgba(255,255,255,.22); }
+    #btnCam { position:absolute; left:14px; bottom:14px; pointer-events:auto; background:rgba(32,32,32,.9); color:#fff; border:0; border-radius:12px; padding:10px 14px; font-weight:700; }
+    #joy { position:fixed; inset:0; pointer-events:none; }
+    .ring,.knob{position:absolute;border-radius:50%;display:none}
+    .ring{width:92px;height:92px;margin:-46px 0 0 -46px;background:rgba(255,255,255,.14)}
+    .knob{width:46px;height:46px;margin:-23px 0 0 -23px;background:rgba(255,255,255,.52)}
   </style>
 </head>
 <body>
-  <div id="wrap">
-    <video id="bg" autoplay playsinline muted></video>
-    <canvas id="fx"></canvas>
-
-    <div class="ui">
-      <div class="btns">
-        <button class="skill" id="btnShield" aria-label="舉盾">🛡️</button>
-        <button class="skill" id="btnRoar" aria-label="怒吼">💢</button>
-        <button class="skill" id="btnSlash" aria-label="揮刀">⚔️</button>
-      </div>
-
-      <button id="btnCam">啟動相機</button>
+  <div id="app"></div>
+  <div id="ui">
+    <div class="btns">
+      <button class="skill" id="btnShield">🛡️</button>
+      <button class="skill" id="btnRoar">💢</button>
+      <button class="skill" id="btnSlash">⚔️</button>
     </div>
+    <button id="btnCam">啟動相機</button>
   </div>
+  <div id="joy"><div class="ring" id="ring"></div><div class="knob" id="knob"></div></div>
 
-<script>
-(() => {
-  const canvas = document.getElementById('fx');
-  const ctx = canvas.getContext('2d');
-  const video = document.getElementById('bg');
-  const btnCam = document.getElementById('btnCam');
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
-  const dogImg = new Image();
-  dogImg.src = './assets/dog.jpg';
+const app = document.getElementById('app');
+const btnCam = document.getElementById('btnCam');
+const ring = document.getElementById('ring');
+const knob = document.getElementById('knob');
 
-  const dog = {
-    x: 0, y: 0,
-    vx: 0, vy: 0,
-    speed: 220,
-    facing: 1,
-    walkPhase: 0,
-    state: 'idle' // idle|left|right|forward|back
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 100);
+camera.position.set(0, 3.4, 7.2);
+
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+app.appendChild(renderer.domElement);
+
+const hemi = new THREE.HemisphereLight(0xffffff, 0x334455, 1.05); scene.add(hemi);
+const dir = new THREE.DirectionalLight(0xffffff, 0.9); dir.position.set(4,8,6); scene.add(dir);
+
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(8, 64),
+  new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.18 })
+);
+floor.rotation.x = -Math.PI/2; floor.position.y = 0; scene.add(floor);
+
+// camera background video texture
+const video = document.createElement('video');
+video.setAttribute('playsinline','');
+video.muted = true;
+video.autoplay = true;
+let bgMesh = null;
+
+function makeEmojiSprite(emoji, size=256){
+  const c=document.createElement('canvas'); c.width=c.height=size;
+  const x=c.getContext('2d');
+  x.font=`${size*0.72}px "Apple Color Emoji","Segoe UI Emoji",sans-serif`;
+  x.textAlign='center'; x.textBaseline='middle';
+  x.fillText(emoji,size/2,size/2);
+  const t=new THREE.CanvasTexture(c); t.needsUpdate=true;
+  return new THREE.Sprite(new THREE.SpriteMaterial({ map:t, transparent:true }));
+}
+
+function processDogTexture(img){
+  // 把角落主色當背景，做簡單去背
+  const c=document.createElement('canvas'); c.width=img.width; c.height=img.height;
+  const x=c.getContext('2d'); x.drawImage(img,0,0);
+  const d=x.getImageData(0,0,c.width,c.height);
+  const p=d.data; const w=c.width,h=c.height;
+
+  function pix(ix,iy){ const i=(iy*w+ix)*4; return [p[i],p[i+1],p[i+2]]; }
+  const samples=[pix(0,0),pix(w-1,0),pix(0,h-1),pix(w-1,h-1),pix((w/2)|0,0),pix((w/2)|0,h-1)];
+  const bg=samples.reduce((a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],[0,0,0]).map(v=>v/samples.length);
+
+  const th=62; // 顏色距離閾值
+  for(let i=0;i<p.length;i+=4){
+    const dr=p[i]-bg[0], dg=p[i+1]-bg[1], db=p[i+2]-bg[2];
+    const dist=Math.sqrt(dr*dr+dg*dg+db*db);
+    if(dist < th){ p[i+3]=0; }
+  }
+  x.putImageData(d,0,0);
+  const tex=new THREE.CanvasTexture(c); tex.needsUpdate=true;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+const dogRoot = new THREE.Group(); scene.add(dogRoot);
+dogRoot.position.set(0,0,0);
+
+let dogMesh;
+{
+  const img = new Image();
+  img.src = './assets/dog.jpg';
+  img.onload = () => {
+    const tex = processDogTexture(img);
+    const mat = new THREE.MeshStandardMaterial({ map:tex, transparent:true, alphaTest:0.08, side:THREE.DoubleSide });
+    dogMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.2,2.2), mat);
+    dogMesh.position.y = 1.15;
+    dogRoot.add(dogMesh);
+
+    // shadow blob
+    const sh = new THREE.Mesh(
+      new THREE.CircleGeometry(0.75, 32),
+      new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.28 })
+    );
+    sh.rotation.x=-Math.PI/2; sh.position.y=0.02;
+    dogRoot.add(sh);
   };
+}
 
-  const joy = {
-    active: false, id: null,
-    baseX: 0, baseY: 0,
-    knobX: 0, knobY: 0,
-    dx: 0, dy: 0,
-    max: 46
-  };
+const shield = makeEmojiSprite('🛡️'); shield.visible=false; shield.scale.set(0.95,0.95,1);
+const sword = makeEmojiSprite('⚔️'); sword.visible=false; sword.scale.set(0.95,0.95,1);
+const roarText = makeEmojiSprite('💢'); roarText.visible=false; roarText.scale.set(0.8,0.8,1);
+dogRoot.add(shield, sword, roarText);
 
-  let shieldUntil = 0;
-  let roarUntil = 0;
-  let slashUntil = 0;
-  const roars = [];
-  let last = performance.now();
+let shieldUntil=0, slashUntil=0, roarUntil=0;
+document.getElementById('btnShield').onclick=()=>shieldUntil=performance.now()+1000;
+document.getElementById('btnSlash').onclick=()=>slashUntil=performance.now()+560;
+document.getElementById('btnRoar').onclick=()=>roarUntil=performance.now()+680;
 
-  function resize() {
-    canvas.width = innerWidth * devicePixelRatio;
-    canvas.height = innerHeight * devicePixelRatio;
-    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
-    if (!dog.x) {
-      dog.x = innerWidth * 0.45;
-      dog.y = innerHeight * 0.72;
-    }
-  }
-  addEventListener('resize', resize);
-  resize();
+// virtual joystick
+const joy={active:false,id:null,bx:0,by:0,kx:0,ky:0,dx:0,dy:0,max:46};
+function setJoy(x,y){
+  const dx=x-joy.bx, dy=y-joy.by; const d=Math.hypot(dx,dy)||1; const c=Math.min(joy.max,d);
+  joy.kx=joy.bx+dx/d*c; joy.ky=joy.by+dy/d*c; joy.dx=(joy.kx-joy.bx)/joy.max; joy.dy=(joy.ky-joy.by)/joy.max;
+  ring.style.left=joy.bx+'px'; ring.style.top=joy.by+'px'; knob.style.left=joy.kx+'px'; knob.style.top=joy.ky+'px';
+}
+function down(e){ const p=e.touches?e.changedTouches[0]:e; joy.active=true; joy.id=p.identifier??'m'; joy.bx=p.clientX; joy.by=p.clientY; joy.kx=p.clientX; joy.ky=p.clientY; joy.dx=joy.dy=0; ring.style.display=knob.style.display='block'; setJoy(p.clientX,p.clientY); }
+function move(e){ if(!joy.active) return; if(e.touches){ for(const t of e.touches) if(t.identifier===joy.id) setJoy(t.clientX,t.clientY);} else setJoy(e.clientX,e.clientY); }
+function up(){ joy.active=false; joy.dx=joy.dy=0; ring.style.display=knob.style.display='none'; }
+renderer.domElement.addEventListener('pointerdown',down);
+renderer.domElement.addEventListener('pointermove',move);
+addEventListener('pointerup',up);
+renderer.domElement.addEventListener('touchstart',down,{passive:true});
+renderer.domElement.addEventListener('touchmove',move,{passive:true});
+addEventListener('touchend',up,{passive:true});
 
-  async function startCam() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-        audio: false
-      });
-      video.srcObject = stream;
-      btnCam.style.display = 'none'; // 啟動後隱藏
-    } catch (e) {
-      btnCam.textContent = '相機不可用';
-    }
-  }
-  btnCam.onclick = startCam;
+btnCam.onclick = async ()=>{
+  try{
+    const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+    video.srcObject=s; await video.play();
+    const tex = new THREE.VideoTexture(video);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    if(bgMesh) scene.remove(bgMesh);
+    const g = new THREE.PlaneGeometry(16,9);
+    const m = new THREE.MeshBasicMaterial({ map:tex });
+    bgMesh = new THREE.Mesh(g,m);
+    bgMesh.position.set(0,3.2,-7.5);
+    scene.add(bgMesh);
+    btnCam.style.display='none';
+  }catch{ btnCam.textContent='相機不可用'; }
+};
 
-  function setJoyFromPoint(x, y) {
-    if (!joy.active) return;
-    const dx = x - joy.baseX;
-    const dy = y - joy.baseY;
-    const dist = Math.hypot(dx, dy) || 1;
-    const c = Math.min(joy.max, dist);
-    joy.knobX = joy.baseX + (dx / dist) * c;
-    joy.knobY = joy.baseY + (dy / dist) * c;
-    joy.dx = (joy.knobX - joy.baseX) / joy.max;
-    joy.dy = (joy.knobY - joy.baseY) / joy.max;
-  }
+let last = performance.now(), walk=0;
+function animate(now){
+  const dt=Math.min(0.033,(now-last)/1000); last=now;
+  const speed=2.6;
+  const mvx=joy.dx*speed, mvz=joy.dy*speed;
+  dogRoot.position.x += mvx*dt;
+  dogRoot.position.z += mvz*dt;
+  dogRoot.position.x = Math.max(-3.8, Math.min(3.8, dogRoot.position.x));
+  dogRoot.position.z = Math.max(-2.6, Math.min(2.6, dogRoot.position.z));
 
-  function onDown(e) {
-    const p = e.touches ? e.changedTouches[0] : e;
-    joy.active = true;
-    joy.id = p.identifier ?? 'mouse';
-    joy.baseX = p.clientX;
-    joy.baseY = p.clientY;
-    joy.knobX = p.clientX;
-    joy.knobY = p.clientY;
-    joy.dx = joy.dy = 0;
-  }
+  const moving=Math.hypot(mvx,mvz)>0.04;
+  walk += dt*(moving?10:3);
+  const bob = moving ? Math.sin(walk)*0.08 : Math.sin(walk*0.5)*0.03;
+  dogRoot.position.y = bob;
 
-  function onMove(e) {
-    if (!joy.active) return;
-    if (e.touches) {
-      for (const t of e.touches) if (t.identifier === joy.id) setJoyFromPoint(t.clientX, t.clientY);
+  // 前後左右分向動作
+  if (dogMesh){
+    if (Math.abs(mvx) > Math.abs(mvz)) {
+      // 左右移動
+      dogRoot.rotation.y = mvx>0 ? -0.25 : 0.25;
+      dogMesh.scale.set(1 + Math.abs(Math.sin(walk))*0.06, 1 - Math.abs(Math.sin(walk))*0.05, 1);
+    } else if (mvz > 0.05) {
+      // 往前
+      dogRoot.rotation.y = 0;
+      dogMesh.scale.set(1.04, 0.92 + Math.abs(Math.sin(walk))*0.05, 1);
+    } else if (mvz < -0.05) {
+      // 往後
+      dogRoot.rotation.y = 0;
+      dogMesh.scale.set(0.96, 1.02 + Math.abs(Math.sin(walk))*0.03, 1);
     } else {
-      setJoyFromPoint(e.clientX, e.clientY);
+      dogRoot.rotation.y *= 0.84;
+      dogMesh.scale.set(1,1,1);
     }
   }
 
-  function onUp() {
-    joy.active = false;
-    joy.dx = joy.dy = 0;
+  const t = performance.now();
+  shield.visible = t < shieldUntil;
+  sword.visible = t < slashUntil;
+  roarText.visible = t < roarUntil;
+
+  shield.position.set(0.9,1.2,0.1);
+  roarText.position.set(0,2.35,0);
+  if (sword.visible){
+    const p=1-(slashUntil-t)/560;
+    sword.position.set(0.95,1.15,0.1);
+    sword.material.rotation = -0.9 + p*1.8;
   }
 
-  canvas.addEventListener('pointerdown', onDown);
-  canvas.addEventListener('pointermove', onMove);
-  addEventListener('pointerup', onUp);
-  canvas.addEventListener('touchstart', onDown, { passive: true });
-  canvas.addEventListener('touchmove', onMove, { passive: true });
-  addEventListener('touchend', onUp, { passive: true });
+  // facing camera billboarding-ish
+  if (dogMesh) dogMesh.lookAt(camera.position.x, dogMesh.getWorldPosition(new THREE.Vector3()).y, camera.position.z);
 
-  document.getElementById('btnShield').onclick = () => { shieldUntil = performance.now() + 1100; };
-  document.getElementById('btnRoar').onclick = () => {
-    roarUntil = performance.now() + 700;
-    roars.push({ x: dog.x, y: dog.y - 36, t: performance.now() });
-  };
-  document.getElementById('btnSlash').onclick = () => { slashUntil = performance.now() + 520; };
+  renderer.render(scene,camera);
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
 
-  function updateState() {
-    const ax = Math.abs(dog.vx), ay = Math.abs(dog.vy);
-    if (ax < 8 && ay < 8) { dog.state = 'idle'; return; }
-    if (ax > ay) dog.state = dog.vx > 0 ? 'right' : 'left';
-    else dog.state = dog.vy > 0 ? 'forward' : 'back';
-  }
-
-  function tick(now) {
-    const dt = Math.min(0.033, (now - last) / 1000);
-    last = now;
-
-    dog.vx = joy.dx * dog.speed;
-    dog.vy = joy.dy * dog.speed;
-    dog.x += dog.vx * dt;
-    dog.y += dog.vy * dt;
-    dog.x = Math.max(56, Math.min(innerWidth - 56, dog.x));
-    dog.y = Math.max(120, Math.min(innerHeight - 24, dog.y));
-
-    if (Math.abs(dog.vx) > 8) dog.facing = Math.sign(dog.vx);
-
-    const moving = Math.hypot(dog.vx, dog.vy) > 10;
-    dog.walkPhase += dt * (moving ? 10 : 2.5);
-    updateState();
-
-    draw(now);
-    requestAnimationFrame(tick);
-  }
-
-  function drawDog(now) {
-    const p = Math.sin(dog.walkPhase);
-
-    // 依方向給不同動作參數（分開前後左右）
-    let tilt = 0, sx = 1, sy = 1, bob = 0;
-
-    if (dog.state === 'left' || dog.state === 'right') {
-      tilt = p * 0.06;
-      sx = 1 + Math.abs(p) * 0.06;
-      sy = 1 - Math.abs(p) * 0.05;
-      bob = p * 5;
-    } else if (dog.state === 'forward') {
-      tilt = 0;
-      sx = 1.02 + Math.abs(p) * 0.03;
-      sy = 0.9 + Math.abs(p) * 0.05;
-      bob = p * 3;
-    } else if (dog.state === 'back') {
-      tilt = 0;
-      sx = 0.95 - Math.abs(p) * 0.02;
-      sy = 1.02 + Math.abs(p) * 0.03;
-      bob = p * 2;
-    } else {
-      bob = Math.sin(dog.walkPhase * 0.5) * 2;
-    }
-
-    const w = 146;
-    const h = 146;
-
-    // shadow
-    ctx.save();
-    ctx.translate(dog.x, dog.y + 22);
-    ctx.scale(1 + Math.abs(dog.vx) / 600, 1 - Math.abs(dog.vy) / 900);
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 34, 14, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0,0,0,.35)';
-    ctx.fill();
-    ctx.restore();
-
-    // body
-    ctx.save();
-    ctx.translate(dog.x, dog.y + bob);
-    ctx.scale(dog.facing, 1);
-    ctx.rotate(tilt);
-    ctx.scale(sx, sy);
-
-    if (dogImg.complete) {
-      ctx.drawImage(dogImg, -w / 2, -h / 2, w, h);
-    } else {
-      ctx.font = '74px "Apple Color Emoji","Segoe UI Emoji"';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('🐕', 0, 0);
-    }
-
-    if (now < shieldUntil) {
-      ctx.font = '38px "Apple Color Emoji","Segoe UI Emoji"';
-      ctx.fillText('🛡️', 45, -6);
-    }
-
-    if (now < slashUntil) {
-      const q = 1 - (slashUntil - now) / 520;
-      ctx.save();
-      ctx.rotate((dog.facing > 0 ? 1 : -1) * (-0.8 + q * 1.6));
-      ctx.font = '42px "Apple Color Emoji","Segoe UI Emoji"';
-      ctx.fillText('⚔️', 52, -22);
-      ctx.restore();
-    }
-
-    if (now < roarUntil) {
-      ctx.fillStyle = 'rgba(255,255,255,.96)';
-      ctx.strokeStyle = 'rgba(0,0,0,.45)';
-      ctx.lineWidth = 4;
-      ctx.font = '700 30px system-ui';
-      ctx.strokeText('嗷嗚！！', 0, -82);
-      ctx.fillText('嗷嗚！！', 0, -82);
-    }
-
-    ctx.restore();
-  }
-
-  function drawRoars(now) {
-    for (let i = roars.length - 1; i >= 0; i--) {
-      const r = roars[i];
-      const age = now - r.t;
-      if (age > 650) { roars.splice(i, 1); continue; }
-      const k = age / 650;
-      const radius = 22 + k * 120;
-      ctx.beginPath();
-      ctx.arc(r.x, r.y, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(255,140,60,${1 - k})`;
-      ctx.lineWidth = 6 * (1 - k) + 1;
-      ctx.stroke();
-    }
-  }
-
-  function drawJoystick() {
-    if (!joy.active) return;
-    ctx.beginPath();
-    ctx.arc(joy.baseX, joy.baseY, joy.max, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,.14)';
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.arc(joy.knobX, joy.knobY, 24, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,.52)';
-    ctx.fill();
-  }
-
-  function draw(now) {
-    ctx.clearRect(0, 0, innerWidth, innerHeight);
-    drawRoars(now);
-    drawDog(now);
-    drawJoystick();
-  }
-
-  requestAnimationFrame(tick);
-})();
+addEventListener('resize', ()=>{
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
 </script>
 </body>
 </html>
