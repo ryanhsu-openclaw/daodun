@@ -38,7 +38,7 @@
   const ring=document.getElementById('ring');
   const knob=document.getElementById('knob');
 
-  const actor={x:0.5,y:0.5,z:0.88,dir:1,walk:0}; // normalized screen coords
+  const actor={x:0.5,y:0.5,z:0.96,dir:1,walk:0}; // normalized screen coords
   const joy={active:false,id:null,bx:0,by:0,kx:0,ky:0,dx:0,dy:0,max:46};
   let shieldUntil=0,roarUntil=0,slashUntil=0;
   let shake=0,flash=0;
@@ -82,7 +82,7 @@
   }
 
   function drawActor(now){
-    const s = 0.68 - actor.z * 0.30; // three steps smaller
+    const s = 0.50 - actor.z * 0.20; // three more steps smaller
     const x=actor.x*innerWidth;
     const y=actor.y*innerHeight;
 
@@ -183,17 +183,17 @@
 
   let last=performance.now();
   let booted=false;
-  let centerFrames=18;
+  let centerFrames=36;
   function loop(now){
     const dt=Math.min(.033,(now-last)/1000); last=now;
 
     if(!booted){
-      actor.x=0.5; actor.y=0.5; actor.z=0.88;
+      actor.x=0.5; actor.y=0.5; actor.z=0.96;
       joy.dx=0; joy.dy=0;
       booted=true;
     }
 
-    if(centerFrames>0){ actor.x=0.5; actor.y=0.5; centerFrames--; }
+    if(centerFrames>0){ actor.x=0.5; actor.y=0.5; actor.z=0.96; joy.dx=0; joy.dy=0; centerFrames--; }
     // filter-style full-screen movement
     actor.x += joy.dx*0.52*dt;
     actor.y += joy.dy * 0.28 * dt;
@@ -201,7 +201,7 @@
 
     actor.x = Math.max(0.08, Math.min(0.92, actor.x));
     actor.y = Math.max(0.22, Math.min(0.86, actor.y));
-    actor.z = Math.max(0.35, Math.min(0.98, actor.z));
+    actor.z = Math.max(0.60, Math.min(0.995, actor.z));
 
     if(Math.abs(joy.dx)>0.06) actor.dir = Math.sign(joy.dx);
 
