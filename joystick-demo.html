@@ -38,7 +38,7 @@
   const ring=document.getElementById('ring');
   const knob=document.getElementById('knob');
 
-  const actor={x:0.5,y:0.5,z:0.62,dir:1,walk:0}; // normalized screen coords
+  const actor={x:0.5,y:0.5,z:0.72,dir:1,walk:0}; // normalized screen coords
   const joy={active:false,id:null,bx:0,by:0,kx:0,ky:0,dx:0,dy:0,max:46};
   let shieldUntil=0,roarUntil=0,slashUntil=0;
   let shake=0,flash=0;
@@ -82,7 +82,7 @@
   }
 
   function drawActor(now){
-    const s = 1.05 - actor.z * 0.55; // default smaller
+    const s = 0.92 - actor.z * 0.42; // default smaller one more step
     const x=actor.x*innerWidth;
     const y=actor.y*innerHeight;
 
@@ -183,15 +183,17 @@
 
   let last=performance.now();
   let booted=false;
+  let centerFrames=18;
   function loop(now){
     const dt=Math.min(.033,(now-last)/1000); last=now;
 
     if(!booted){
-      actor.x=0.5; actor.y=0.5; actor.z=0.62;
+      actor.x=0.5; actor.y=0.5; actor.z=0.72;
       joy.dx=0; joy.dy=0;
       booted=true;
     }
 
+    if(centerFrames>0){ actor.x=0.5; actor.y=0.5; centerFrames--; }
     // filter-style full-screen movement
     actor.x += joy.dx*0.52*dt;
     actor.y += joy.dy * 0.28 * dt;
