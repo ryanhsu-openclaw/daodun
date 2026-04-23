@@ -38,7 +38,7 @@ const ring=document.getElementById('ring');
 const knob=document.getElementById('knob');
 
 const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,100);
+const camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,200);
 camera.position.set(0,3.4,8);
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
 renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x000000,0);
@@ -46,10 +46,9 @@ document.getElementById('app').appendChild(renderer.domElement);
 
 scene.add(new THREE.HemisphereLight(0xffffff,0x345,1.05));
 const dl=new THREE.DirectionalLight(0xffffff,.95);dl.position.set(4,8,6);scene.add(dl);
-const floor=new THREE.Mesh(new THREE.CircleGeometry(20,64),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.18}));
-floor.rotation.x=-Math.PI/2;floor.position.y=-0.02;scene.add(floor);
 
-// ===== cute 3D humanoid rig =====
+// no black circle range
+
 const root=new THREE.Group();scene.add(root);root.position.set(0,0,0);
 const skin=new THREE.MeshStandardMaterial({color:0xffd7b0,roughness:.75});
 const cloth=new THREE.MeshStandardMaterial({color:0x6aa0ff,roughness:.7});
@@ -79,16 +78,14 @@ function makeLeg(side){
 }
 const armL=makeArm(-1), armR=makeArm(1), legL=makeLeg(-1), legR=makeLeg(1);
 
-// sword & shield as meshes
 const shield=new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.25,0.06,24),new THREE.MeshStandardMaterial({color:0x9cb8ff,metalness:.4,roughness:.35}));
 shield.rotation.z=Math.PI/2; shield.position.set(0.18,-0.38,0.02); armL.hand.add(shield);
 const swordGrp=new THREE.Group();
-const blade=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.62,0.02),new THREE.MeshStandardMaterial({color:0xdfe6ff,metalness:.8,roughness:.2})); blade.position.y=-0.35;
-const guard=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.03,0.05),new THREE.MeshStandardMaterial({color:0x7d8aa8,metalness:.7,roughness:.3}));
+const blade=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.72,0.02),new THREE.MeshStandardMaterial({color:0xdfe6ff,metalness:.8,roughness:.2})); blade.position.y=-0.40;
+const guard=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.04,0.05),new THREE.MeshStandardMaterial({color:0x7d8aa8,metalness:.7,roughness:.3}));
 const grip=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.18,8),new THREE.MeshStandardMaterial({color:0x5b4635})); grip.position.y=-0.05;
 swordGrp.add(blade,guard,grip); swordGrp.position.set(0,-0.40,0.02); armR.hand.add(swordGrp);
 
-// joystick
 const joy={active:false,id:null,bx:0,by:0,kx:0,ky:0,dx:0,dy:0,max:46};
 function setJoy(x,y){const dx=x-joy.bx,dy=y-joy.by,d=Math.hypot(dx,dy)||1,c=Math.min(joy.max,d);joy.kx=joy.bx+dx/d*c;joy.ky=joy.by+dy/d*c;joy.dx=(joy.kx-joy.bx)/joy.max;joy.dy=(joy.ky-joy.by)/joy.max;ring.style.left=joy.bx+'px';ring.style.top=joy.by+'px';knob.style.left=joy.kx+'px';knob.style.top=joy.ky+'px';}
 function down(e){const p=e.touches?e.changedTouches[0]:e;joy.active=true;joy.id=p.identifier??'m';joy.bx=p.clientX;joy.by=p.clientY;ring.style.display=knob.style.display='block';setJoy(p.clientX,p.clientY);}
@@ -97,11 +94,10 @@ function up(){joy.active=false;joy.dx=joy.dy=0;ring.style.display=knob.style.dis
 renderer.domElement.addEventListener('pointerdown',down);renderer.domElement.addEventListener('pointermove',move);addEventListener('pointerup',up);
 renderer.domElement.addEventListener('touchstart',down,{passive:true});renderer.domElement.addEventListener('touchmove',move,{passive:true});addEventListener('touchend',up,{passive:true});
 
-// skills
 let shieldUntil=0, roarUntil=0, slashUntil=0;
-document.getElementById('btnShield').onclick=()=>shieldUntil=performance.now()+700;
-document.getElementById('btnRoar').onclick=()=>roarUntil=performance.now()+520;
-document.getElementById('btnSlash').onclick=()=>slashUntil=performance.now()+520;
+document.getElementById('btnShield').onclick=()=>shieldUntil=performance.now()+900;
+document.getElementById('btnRoar').onclick=()=>roarUntil=performance.now()+700;
+document.getElementById('btnSlash').onclick=()=>slashUntil=performance.now()+680;
 
 btnCam.onclick=async()=>{
   try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});video.srcObject=s;await video.play();btnCam.style.display='none';}
@@ -109,66 +105,90 @@ btnCam.onclick=async()=>{
 };
 
 let last=performance.now(), walk=0;
+const camTarget = new THREE.Vector3(0,1.2,0);
+
 function anim(now){
   const dt=Math.min(.033,(now-last)/1000); last=now;
-  const vx=joy.dx*3.0, vz=joy.dy*3.0; const moving=Math.hypot(vx,vz)>0.03;
+  const vx=joy.dx*4.5, vz=joy.dy*4.5; // faster movement
+  const moving=Math.hypot(vx,vz)>0.03;
 
-  // full-screen movement area
-  root.position.x += vx*dt; root.position.z += vz*dt;
-  root.position.x = Math.max(-9, Math.min(9, root.position.x));
-  root.position.z = Math.max(-13, Math.min(13, root.position.z));
+  root.position.x += vx*dt;
+  root.position.z += vz*dt;
 
-  // movement facing
-  if(Math.abs(vx)>0.05){ root.rotation.y = vx>0 ? -0.22 : 0.22; }
-  else root.rotation.y *= 0.85;
+  // camera follow => effectively full-screen movement without bounds
+  camTarget.set(root.position.x, 1.4, root.position.z);
+  const desired = new THREE.Vector3(root.position.x, 3.4, root.position.z + 8.0);
+  camera.position.lerp(desired, 0.08);
+  camera.lookAt(camTarget);
 
-  walk += dt*(moving?9:2.5);
+  // face movement direction (full 360)
+  if (moving) {
+    const angle = Math.atan2(vx, vz); // x/z
+    root.rotation.y = THREE.MathUtils.lerp(root.rotation.y, angle, 0.22);
+  }
+
+  walk += dt*(moving?11:2.4);
   const s1=Math.sin(walk), s2=Math.sin(walk+Math.PI);
 
-  // leg gait
-  legL.hip.rotation.x = s1*0.7; legL.knee.rotation.x = Math.max(0,-s1)*0.8;
-  legR.hip.rotation.x = s2*0.7; legR.knee.rotation.x = Math.max(0,-s2)*0.8;
+  // exaggerated walk cycle
+  legL.hip.rotation.x = s1*0.95; legL.knee.rotation.x = Math.max(0,-s1)*1.05;
+  legR.hip.rotation.x = s2*0.95; legR.knee.rotation.x = Math.max(0,-s2)*1.05;
+  armL.shoulder.rotation.x = moving ? s2*0.65 : 0;
+  armR.shoulder.rotation.x = moving ? s1*0.65 : 0;
 
-  // idle/move bounce
-  root.position.y = moving ? Math.sin(walk*2)*0.03 : Math.sin(walk*0.7)*0.02;
+  root.position.y = moving ? Math.sin(walk*2)*0.05 : Math.sin(walk*0.7)*0.02;
 
-  // default arm swing when moving
-  armL.shoulder.rotation.x = moving ? s2*0.35 : 0;
-  armR.shoulder.rotation.x = moving ? s1*0.35 : 0;
-  armL.elbow.rotation.x = 0; armR.elbow.rotation.x = 0;
+  // reset baseline
+  armL.elbow.rotation.set(0,0,0);
+  armR.elbow.rotation.set(0,0,0);
+  armL.shoulder.rotation.z = 0;
+  armR.shoulder.rotation.z = 0;
   headPivot.rotation.x = 0;
+  body.rotation.x = 0;
 
   const t=performance.now();
 
-  // shield pose: raise left arm + shield in front
+  // SHIELD (big defensive pose)
   if(t<shieldUntil){
-    armL.shoulder.rotation.x = -1.1;
-    armL.shoulder.rotation.z = -0.35;
-    armL.elbow.rotation.x = -0.35;
-    shield.rotation.y = 0.55;
+    const p = 1 - (shieldUntil - t)/900;
+    armL.shoulder.rotation.x = -1.55 + p*0.2;
+    armL.shoulder.rotation.z = -0.95;
+    armL.elbow.rotation.x = -1.2;
+    body.rotation.x = -0.2;
+    shield.rotation.y = 1.25;
+    shield.scale.setScalar(1.18);
   } else {
     shield.rotation.y = 0;
+    shield.scale.setScalar(1);
   }
 
-  // roar pose: head back + both arms spread + body up
+  // ROAR (big scream pose)
   if(t<roarUntil){
-    const p=1-(roarUntil-t)/520;
-    headPivot.rotation.x = -0.45;
-    armL.shoulder.rotation.z = -0.7; armR.shoulder.rotation.z = 0.7;
-    armL.shoulder.rotation.x = -0.5; armR.shoulder.rotation.x = -0.5;
-    root.position.y += Math.sin(p*Math.PI)*0.08;
+    const p=1-(roarUntil-t)/700;
+    const pulse = Math.sin(p*Math.PI)*0.25;
+    headPivot.rotation.x = -0.95;
+    armL.shoulder.rotation.z = -1.25;
+    armR.shoulder.rotation.z = 1.25;
+    armL.shoulder.rotation.x = -1.0;
+    armR.shoulder.rotation.x = -1.0;
+    body.rotation.x = -0.32;
+    root.position.y += pulse*0.22;
   }
 
-  // slash pose: right arm swings down
+  // SLASH (big sword swing)
   if(t<slashUntil){
-    const p=1-(slashUntil-t)/520;
-    const angle = -1.3 + p*2.2; // from back to front slash
+    const p=1-(slashUntil-t)/680;
+    const angle = -2.1 + p*3.2;
     armR.shoulder.rotation.x = angle;
-    armR.shoulder.rotation.z = 0.25;
-    armR.elbow.rotation.x = -0.25;
-    swordGrp.rotation.z = -0.5 + p*1.2;
+    armR.shoulder.rotation.z = 0.78;
+    armR.elbow.rotation.x = -1.1;
+    body.rotation.y = Math.sin(p*Math.PI)*0.22;
+    swordGrp.rotation.z = -1.4 + p*2.3;
+    swordGrp.position.x = 0.12;
   } else {
     swordGrp.rotation.z = 0;
+    swordGrp.position.x = 0;
+    body.rotation.y *= 0.84;
   }
 
   renderer.render(scene,camera);
