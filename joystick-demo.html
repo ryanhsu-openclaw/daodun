@@ -55,7 +55,7 @@
     canvas.height=innerHeight*devicePixelRatio;
     ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
   }
-  addEventListener('resize',()=>{ resize(); viewportW=Math.round(window.innerWidth); viewportH=Math.round(window.innerHeight); hardCenter(); centerFrames=30; });
+  addEventListener('resize',()=>{ resize(); viewportW=Math.round(window.innerWidth); viewportH=Math.round(window.innerHeight); });
 resize();
 
   btnCam.onclick=async()=>{
@@ -96,10 +96,10 @@ resize();
     const roaring = tNow < roarUntil;
 
     // hard pixel-space bounds from actual drawn extents (more reliable than symmetric padding)
-    const leftExtent = Math.max(120, 250 * s);
-    const rightExtent = Math.max(210, 430 * s) + (attacking ? 90 * s : 0) + (roaring ? 40 * s : 0);
-    const topExtent = Math.max(170, 360 * s);
-    const bottomExtent = Math.max(140, 260 * s) + (attacking ? 40 * s : 0);
+    const leftExtent = Math.max(36, 95 * s);
+    const rightExtent = Math.max(72, 150 * s) + (attacking ? 42 * s : 0) + (roaring ? 18 * s : 0);
+    const topExtent = Math.max(46, 120 * s);
+    const bottomExtent = Math.max(58, 138 * s) + (attacking ? 24 * s : 0);
 
     const minX = leftExtent;
     const maxX = viewportW - rightExtent;
@@ -210,9 +210,8 @@ resize();
   }
 
   let last=performance.now();
-  hardCenter();
   let booted=false;
-  let centerFrames=36;
+  let centerFrames=0;
   function loop(now){
     const dt=Math.min(.033,(now-last)/1000); last=now;
 
@@ -269,7 +268,7 @@ resize();
     ctx.fillText(`inner center: (${cx}, ${cy})`, 16, 60);
     ctx.fillText(`actor(px): (${Math.round(actor.x*iw)}, ${Math.round(actor.y*ih)})`, 16, 76);
     ctx.fillText(`z: ${actor.z.toFixed(3)}  scale: ${(1.10 - actor.z*0.85).toFixed(3)}`, 16, 92);
-    ctx.fillText(`bounds: pixel clamp L/R/T/B enabled`, 16, 108);
+    ctx.fillText(`bounds: relaxed clamp (keep visible + full roam)`, 16, 108);
 
     // center crosshair
     ctx.strokeStyle='rgba(255,255,255,.7)';
