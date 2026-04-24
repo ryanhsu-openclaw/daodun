@@ -38,14 +38,14 @@
   const ring=document.getElementById('ring');
   const knob=document.getElementById('knob');
 
-  const actor={x:0.5,y:0.58,z:0.82,dir:1,walk:0}; // normalized screen coords
+  const actor={x:0.5,y:0.5,z:0.82,dir:1,walk:0}; // normalized screen coords
   const joy={active:false,id:null,bx:0,by:0,kx:0,ky:0,dx:0,dy:0,max:46};
   let viewportW = innerWidth;
   let viewportH = innerHeight;
   let shieldUntil=0,roarUntil=0,slashUntil=0;
 
   function hardCenter(){
-    actor.x=0.5; actor.y=0.58; actor.z=0.82;
+    actor.x=0.5; actor.y=0.5; actor.z=0.82;
     joy.dx=0; joy.dy=0;
   }
   let shake=0,flash=0;
@@ -205,12 +205,12 @@ resize();
     viewportH = Math.round(window.innerHeight);
 
     if(!booted){
-      actor.x=0.5; actor.y=0.58; actor.z=0.82;
+      actor.x=0.5; actor.y=0.5; actor.z=0.82;
       joy.dx=0; joy.dy=0;
       booted=true;
     }
 
-    if(centerFrames>0){ hardCenter(); actor.y=0.58; centerFrames--; }
+    if(centerFrames>0){ hardCenter(); centerFrames--; }
     // filter-style full-screen movement
     actor.x += joy.dx*0.52*dt;
     actor.y += joy.dy * 0.28 * dt;
