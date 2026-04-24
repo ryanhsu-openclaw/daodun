@@ -273,37 +273,6 @@ resize();
     ctx.translate(sx,sy);
     ctx.clearRect(-sx,-sy,innerWidth,innerHeight);
     drawActor(now);
-    // debug info (draw in screen coordinate space)
-    ctx.save();
-    ctx.setTransform(1,0,0,1,0,0);
-    const iw = Math.round(window.innerWidth);
-    const ih = Math.round(window.innerHeight);
-    const vw = Math.round(window.visualViewport?.width || 0);
-    const vh = Math.round(window.visualViewport?.height || 0);
-    const cx = Math.round(iw/2), cy = Math.round(ih/2);
-
-    ctx.fillStyle='rgba(0,0,0,.55)';
-    ctx.fillRect(8,8,360,124);
-    ctx.fillStyle='#fff';
-    ctx.font='12px monospace';
-    ctx.fillText(`inner W/H: ${iw} x ${ih}`, 16, 28);
-    ctx.fillText(`visual W/H: ${vw} x ${vh}`, 16, 44);
-    ctx.fillText(`inner center: (${cx}, ${cy})`, 16, 60);
-    ctx.fillText(`actor(px): (${Math.round(actor.x*iw)}, ${Math.round(actor.y*ih)})`, 16, 76);
-    ctx.fillText(`z: ${actor.z.toFixed(3)}  scale: ${Math.min(0.66, (1.06 - actor.z*0.82)).toFixed(3)}`, 16, 92);
-    ctx.fillText(`bounds: hard cap max at (140,220)`, 16, 108);
-
-    // center crosshair
-    ctx.strokeStyle='rgba(255,255,255,.7)';
-    ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(cx-16, cy); ctx.lineTo(cx+16, cy); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx, cy-16); ctx.lineTo(cx, cy+16); ctx.stroke();
-    ctx.restore();
-    // center marker (very light) to align expected screen center
-    ctx.strokeStyle='rgba(255,255,255,.45)';
-    ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(viewportW*0.5-14, viewportH*0.5); ctx.lineTo(viewportW*0.5+14, viewportH*0.5); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(viewportW*0.5, viewportH*0.5-14); ctx.lineTo(viewportW*0.5, viewportH*0.5+14); ctx.stroke();
     ctx.restore();
 
     requestAnimationFrame(loop);
