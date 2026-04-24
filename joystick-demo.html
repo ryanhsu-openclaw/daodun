@@ -134,11 +134,19 @@ resize();
     }
 
     const t=performance.now();
-    if(t<shieldUntil){
+    const shieldActive = t < shieldUntil;
+    const roarActive = t < roarUntil;
+    const slashActive = t < slashUntil;
+
+    if(shieldActive){
       const p=1-(shieldUntil-t)/950;
-      lArm=-2.1+p*0.2; lFore=-1.9; bodyTilt=-0.34; headTilt=0.12;
+      const ease = Math.sin(p * Math.PI * 0.5);
+      lArm=-1.9 - 0.35*ease;
+      lFore=-1.25 - 0.45*ease;
+      bodyTilt=-0.18 - 0.12*ease;
+      headTilt=0.08;
     }
-    if(t<roarUntil){
+    if(roarActive){
       const p=1-(roarUntil-t)/820;
       const burst=Math.sin(p*Math.PI);
       lArm=-2.35; rArm=-2.35; lFore=-0.45; rFore=-0.45;
@@ -149,18 +157,21 @@ resize();
       ctx.fillStyle='rgba(255,255,255,.96)'; ctx.font=`${36*s}px system-ui`; ctx.textAlign='center';
       ctx.fillText('啊啊啊！！', x, chestY-112*s-burst*20*s);
     }
-    if(t<slashUntil){
+    if(slashActive){
       const p=1-(slashUntil-t)/760;
-      rArm=-2.5+p*3.5; rFore=-1.6+p*2.2; bodyTilt=-0.5+p*0.58;
+      const ease = p < 0.5 ? (2*p*p) : (1 - Math.pow(-2*p+2,2)/2);
+      rArm=-2.15 + ease*2.9;
+      rFore=-1.35 + ease*1.9;
+      bodyTilt=-0.35 + ease*0.45;
       ctx.save();
-      ctx.translate(x+40*s*actor.dir, chestY+5*s);
+      ctx.translate(x+34*s*actor.dir, chestY+2*s);
       ctx.scale(actor.dir,1);
-      ctx.rotate(-2.3+p*3.2);
-      const g=ctx.createLinearGradient(0,-10*s,160*s,10*s);
+      ctx.rotate(-1.95+ease*2.7);
+      const g=ctx.createLinearGradient(0,-8*s,130*s,8*s);
       g.addColorStop(0,'rgba(255,255,255,0)');
-      g.addColorStop(.5,'rgba(170,220,255,.95)');
+      g.addColorStop(.5,'rgba(170,220,255,.78)');
       g.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=g; ctx.fillRect(0,-10*s,170*s,20*s);
+      ctx.fillStyle=g; ctx.fillRect(0,-8*s,138*s,16*s);
       ctx.restore();
     }
 
@@ -191,9 +202,17 @@ resize();
 
     // shield
     ctx.save();
-    ctx.translate(lh2x,lh2y); ctx.rotate(lArm+lFore+(t<shieldUntil?1.35:0.2));
+    if(shieldActive){
+      ctx.translate(lh2x + 6*s, lh2y - 2*s);
+      ctx.rotate(lArm + lFore + 0.95);
+      ctx.scale(1.08,1.08);
+    } else {
+      ctx.translate(lh2x, lh2y);
+      ctx.rotate(lArm + lFore + 0.45);
+      ctx.scale(0.92,0.92);
+    }
     ctx.fillStyle='#9cb8ff'; ctx.beginPath(); ctx.ellipse(0,0,20*s,26*s,0,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle='rgba(255,255,255,.8)'; ctx.lineWidth=3*s; ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.lineWidth=3*s; ctx.stroke();
     ctx.restore();
 
     // sword
