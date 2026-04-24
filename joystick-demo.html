@@ -294,11 +294,6 @@ resize();
     ctx.lineWidth=2;
     ctx.beginPath(); ctx.moveTo(viewportW*0.5-14, viewportH*0.5); ctx.lineTo(viewportW*0.5+14, viewportH*0.5); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(viewportW*0.5, viewportH*0.5-14); ctx.lineTo(viewportW*0.5, viewportH*0.5+14); ctx.stroke();
-    if(flash>0){
-      flash*=0.8;
-      ctx.fillStyle=`rgba(255,255,255,${Math.min(0.35,flash)})`;
-      ctx.fillRect(-sx,-sy,innerWidth,innerHeight);
-    }
     ctx.restore();
 
     requestAnimationFrame(loop);
