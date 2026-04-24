@@ -187,7 +187,8 @@ resize();
     ctx.restore();
 
     const shY=-torsoH*.75, shX=torsoW*.55;
-    const [lhx,lhy]=limb(-shX,shY,46*s,lArm,12*s,'#6aa0ff');
+    const shieldArmDrop = shieldActive ? 25 : 0; // drop shield-side arm by 25px when guarding
+    const [lhx,lhy]=limb(-shX,shY + shieldArmDrop,46*s,lArm,12*s,'#6aa0ff');
     const [lh2x,lh2y]=limb(lhx,lhy,42*s,lArm+lFore,11*s,'#ffd7b0');
     const [rhx,rhy]=limb(shX,shY,46*s,rArm,12*s,'#6aa0ff');
     const [rh2x,rh2y]=limb(rhx,rhy,42*s,rArm+rFore,11*s,'#ffd7b0');
