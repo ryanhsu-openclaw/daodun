@@ -90,7 +90,7 @@ resize();
   }
 
   function drawActor(now){
-    const s = 0.50 - actor.z * 0.20; // three more steps smaller
+    const s = 1.10 - actor.z * 0.85; // stronger near/far scaling
     // dynamic bounds: allow full-screen roam while keeping whole character visible
     const padX = Math.max(70, 180 * s);
     const padY = Math.max(90, 230 * s);
@@ -219,8 +219,8 @@ resize();
       // filter-style full-screen movement
       actor.x += joy.dx * 0.52 * dt;
       actor.y += joy.dy * 0.28 * dt;
-      actor.z += joy.dy * 0.55 * dt;
-      actor.z = Math.max(0.60, Math.min(0.995, actor.z));
+      actor.z += joy.dy * 0.95 * dt;
+      actor.z = Math.max(0.18, Math.min(0.98, actor.z));
       if(Math.abs(joy.dx)>0.06) actor.dir = Math.sign(joy.dx);
     }
 
@@ -246,13 +246,14 @@ resize();
     const cx = Math.round(iw/2), cy = Math.round(ih/2);
 
     ctx.fillStyle='rgba(0,0,0,.55)';
-    ctx.fillRect(8,8,320,92);
+    ctx.fillRect(8,8,340,108);
     ctx.fillStyle='#fff';
     ctx.font='12px monospace';
     ctx.fillText(`inner W/H: ${iw} x ${ih}`, 16, 28);
     ctx.fillText(`visual W/H: ${vw} x ${vh}`, 16, 44);
     ctx.fillText(`inner center: (${cx}, ${cy})`, 16, 60);
     ctx.fillText(`actor(px): (${Math.round(actor.x*iw)}, ${Math.round(actor.y*ih)})`, 16, 76);
+    ctx.fillText(`z: ${actor.z.toFixed(3)}  scale: ${(1.10 - actor.z*0.85).toFixed(3)}`, 16, 92);
 
     // center crosshair
     ctx.strokeStyle='rgba(255,255,255,.7)';
