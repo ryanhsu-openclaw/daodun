@@ -92,10 +92,12 @@ resize();
   function drawActor(now){
     const s = 1.10 - actor.z * 0.85; // stronger near/far scaling
     // dynamic bounds: allow full-screen roam while keeping whole character visible
-    const padX = Math.max(70, 180 * s);
-    const padY = Math.max(90, 230 * s);
-    actor.x = Math.max(padX / viewportW, Math.min(1 - padX / viewportW, actor.x));
-    actor.y = Math.max(padY / viewportH, Math.min(1 - padY / viewportH, actor.y));
+    const padLeft = Math.max(70, 170 * s);
+    const padRight = Math.max(92, 220 * s);   // extra prevent overflow on right
+    const padTop = Math.max(90, 210 * s);
+    const padBottom = Math.max(120, 270 * s); // extra prevent overflow on bottom
+    actor.x = Math.max(padLeft / viewportW, Math.min(1 - padRight / viewportW, actor.x));
+    actor.y = Math.max(padTop / viewportH, Math.min(1 - padBottom / viewportH, actor.y));
     const x=actor.x*viewportW;
     const y=actor.y*viewportH;
 
@@ -246,7 +248,7 @@ resize();
     const cx = Math.round(iw/2), cy = Math.round(ih/2);
 
     ctx.fillStyle='rgba(0,0,0,.55)';
-    ctx.fillRect(8,8,340,108);
+    ctx.fillRect(8,8,360,124);
     ctx.fillStyle='#fff';
     ctx.font='12px monospace';
     ctx.fillText(`inner W/H: ${iw} x ${ih}`, 16, 28);
@@ -254,6 +256,7 @@ resize();
     ctx.fillText(`inner center: (${cx}, ${cy})`, 16, 60);
     ctx.fillText(`actor(px): (${Math.round(actor.x*iw)}, ${Math.round(actor.y*ih)})`, 16, 76);
     ctx.fillText(`z: ${actor.z.toFixed(3)}  scale: ${(1.10 - actor.z*0.85).toFixed(3)}`, 16, 92);
+    ctx.fillText(`bounds: keep inside viewport (R/B boosted)`, 16, 108);
 
     // center crosshair
     ctx.strokeStyle='rgba(255,255,255,.7)';
