@@ -55,7 +55,7 @@
     canvas.height=innerHeight*devicePixelRatio;
     ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
   }
-  addEventListener('resize',()=>{ resize(); const vv=window.visualViewport; viewportW=Math.round((vv&&vv.width)||canvas.clientWidth||innerWidth); viewportH=Math.round((vv&&vv.height)||canvas.clientHeight||innerHeight); hardCenter(); centerFrames=30; });
+  addEventListener('resize',()=>{ resize(); const width = window.visualViewport?.width; const height = window.visualViewport?.height; viewportW=Math.round(width||innerWidth); viewportH=Math.round(height||innerHeight); hardCenter(); centerFrames=30; });
 resize();
 
   btnCam.onclick=async()=>{
@@ -201,9 +201,10 @@ resize();
   function loop(now){
     const dt=Math.min(.033,(now-last)/1000); last=now;
 
-    const rect = canvas.getBoundingClientRect();
-    viewportW = Math.round(rect.width || innerWidth);
-    viewportH = Math.round(rect.height || innerHeight);
+    const width = window.visualViewport?.width;
+    const height = window.visualViewport?.height;
+    viewportW = Math.round(width || innerWidth);
+    viewportH = Math.round(height || innerHeight);
 
     if(!booted){
       actor.x=0.5; actor.y=0.58; actor.z=0.82;
