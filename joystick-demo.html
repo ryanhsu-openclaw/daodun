@@ -194,12 +194,12 @@ resize();
     ctx.save();
     ctx.translate(0,-torsoH-headR*.35); ctx.rotate(headTilt);
     // hair back
-    ctx.fillStyle='#ff5fa2'; ctx.beginPath(); ctx.ellipse(0, 3*s, headR*1.06, headR*1.12, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle='#ffc1dc'; ctx.beginPath(); ctx.arc(0,0,headR,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#5a3b2f'; ctx.beginPath(); ctx.ellipse(0, 3*s, headR*1.06, headR*1.12, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#ffd7b0'; ctx.beginPath(); ctx.arc(0,0,headR,0,Math.PI*2); ctx.fill();
     // bangs
-    ctx.fillStyle='#ff4f98'; ctx.beginPath(); ctx.ellipse(0, -headR*0.42, headR*0.92, headR*0.48, 0, Math.PI, 2*Math.PI); ctx.fill();
+    ctx.fillStyle='#4a2f25'; ctx.beginPath(); ctx.ellipse(0, -headR*0.42, headR*0.92, headR*0.48, 0, Math.PI, 2*Math.PI); ctx.fill();
     // eyes
-    ctx.fillStyle='#ff2f8e'; ctx.beginPath(); ctx.arc(-headR*.30,-headR*.10,headR*.11,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(-headR*.30,-headR*.10,headR*.11,0,Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.arc(headR*.30,-headR*.10,headR*.11,0,Math.PI*2); ctx.fill();
     // eye sparkle
     ctx.fillStyle='rgba(255,255,255,.9)'; ctx.beginPath(); ctx.arc(-headR*.34,-headR*.14,headR*.03,0,Math.PI*2); ctx.fill();
@@ -209,15 +209,15 @@ resize();
     ctx.beginPath(); ctx.ellipse(-headR*.48, headR*.12, headR*.22, headR*.12, 0, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(headR*.48, headR*.12, headR*.22, headR*.12, 0, 0, Math.PI*2); ctx.fill();
     // smile
-    ctx.strokeStyle='#ff3f9a'; ctx.lineWidth=2.2*s; ctx.beginPath(); ctx.arc(0, headR*.18, headR*.20, 0.15*Math.PI, 0.85*Math.PI); ctx.stroke();
+    ctx.strokeStyle='#b34b74'; ctx.lineWidth=2.2*s; ctx.beginPath(); ctx.arc(0, headR*.18, headR*.20, 0.15*Math.PI, 0.85*Math.PI); ctx.stroke();
     ctx.restore();
 
     const shY=-torsoH*.75, shX=torsoW*.55;
     const shieldArmDrop = fixedShieldPose ? 10 : 0; // idle/walk/slash all use same shield-hand slot
     const [lhx,lhy]=limb(-shX,shY + shieldArmDrop,46*s,lArm,12*s,'#ff8fbc');
-    const [lh2x,lh2y]=limb(lhx,lhy,42*s,lArm+lFore,11*s,'#ffc1dc');
+    const [lh2x,lh2y]=limb(lhx,lhy,42*s,lArm+lFore,11*s,'#ffd7b0');
     const [rhx,rhy]=limb(shX,shY,46*s,rArm,12*s,'#ff8fbc');
-    const [rh2x,rh2y]=limb(rhx,rhy,42*s,rArm+rFore,11*s,'#ffc1dc');
+    const [rh2x,rh2y]=limb(rhx,rhy,42*s,rArm+rFore,11*s,'#ffd7b0');
 
     // shield
     ctx.save();
@@ -245,12 +245,12 @@ resize();
     // crossguard at grip point
     ctx.fillStyle='#ff7eb8'; ctx.fillRect(-10*s,-2*s,20*s,4*s);
     // handle below guard (in hand)
-    ctx.fillStyle='#ff5ea8'; ctx.fillRect(-2.5*s,2*s,5*s,14*s);
+    ctx.fillStyle='#5a4637'; ctx.fillRect(-2.5*s,2*s,5*s,14*s);
     ctx.restore();
 
     const hipOff=torsoW*.24;
-    const [lkx,lky]=limb(-hipOff,0,50*s,lLeg,13*s,'#ff7ab8'); limb(lkx,lky,45*s,lLeg+lShin,12*s,'#ff5fa5');
-    const [rkx,rky]=limb(hipOff,0,50*s,rLeg,13*s,'#ff7ab8'); limb(rkx,rky,45*s,rLeg+rShin,12*s,'#ff5fa5');
+    const [lkx,lky]=limb(-hipOff,0,50*s,lLeg,13*s,'#454b59'); limb(lkx,lky,45*s,lLeg+lShin,12*s,'#373c49');
+    const [rkx,rky]=limb(hipOff,0,50*s,rLeg,13*s,'#454b59'); limb(rkx,rky,45*s,rLeg+rShin,12*s,'#373c49');
 
     ctx.restore();
   }
