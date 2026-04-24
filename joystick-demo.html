@@ -48,7 +48,7 @@
     actor.x=0.174; actor.y=0.188; actor.z=0.82;
     joy.dx=0; joy.dy=0;
   }
-  let shake=0,flash=0;
+  let shake=0;
 
   function resize(){
     canvas.width=innerWidth*devicePixelRatio;
@@ -80,7 +80,7 @@ resize();
 
   document.getElementById('btnShield').onclick=()=>{shieldUntil=performance.now()+950; shake=8;};
   document.getElementById('btnRoar').onclick=()=>{roarUntil=performance.now()+820; shake=12;};
-  document.getElementById('btnSlash').onclick=()=>{ const now=performance.now(); slashUntil = (slashUntil>now ? Math.min(slashUntil+380, now+1400) : now+760); flash=Math.max(flash,0.55); shake=Math.max(shake,8); };
+  document.getElementById('btnSlash').onclick=()=>{ const now=performance.now(); slashUntil = (slashUntil>now ? Math.min(slashUntil+380, now+1400) : now+760); shake=Math.max(shake,8); };
 
   function limb(x,y,len,ang,w,color){
     const ex=x+Math.cos(ang)*len, ey=y+Math.sin(ang)*len;
