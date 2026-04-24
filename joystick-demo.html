@@ -38,14 +38,14 @@
   const ring=document.getElementById('ring');
   const knob=document.getElementById('knob');
 
-  const actor={x:0.5,y:0.5,z:0.82,dir:1,walk:0}; // normalized screen coords
+  const actor={x:0.174,y:0.188,z:0.82,dir:1,walk:0}; // normalized screen coords (~70,123 on 402x654)
   const joy={active:false,id:null,bx:0,by:0,kx:0,ky:0,dx:0,dy:0,max:46};
   let viewportW = innerWidth;
   let viewportH = innerHeight;
   let shieldUntil=0,roarUntil=0,slashUntil=0;
 
   function hardCenter(){
-    actor.x=0.5; actor.y=0.5; actor.z=0.82;
+    actor.x=0.174; actor.y=0.188; actor.z=0.82;
     joy.dx=0; joy.dy=0;
   }
   let shake=0,flash=0;
@@ -205,14 +205,14 @@ resize();
     viewportH = Math.round(window.innerHeight);
 
     if(!booted){
-      actor.x=0.5; actor.y=0.5; actor.z=0.82;
+      actor.x=0.174; actor.y=0.188; actor.z=0.82;
       joy.dx=0; joy.dy=0;
       booted=true;
     }
 
     if(centerFrames>0){
       // hard lock at exact center during startup frames
-      actor.x=0.5; actor.y=0.5; actor.z=0.82;
+      actor.x=0.174; actor.y=0.188; actor.z=0.82;
       joy.dx=0; joy.dy=0;
       centerFrames--;
     } else {
@@ -225,7 +225,7 @@ resize();
     }
 
     if(!Number.isFinite(actor.x) || !Number.isFinite(actor.y) || actor.x < 0 || actor.x > 1 || actor.y < 0 || actor.y > 1){
-      actor.x = 0.5; actor.y = 0.5; actor.z = 0.82;
+      actor.x = 0.174; actor.y = 0.188; actor.z = 0.82;
     }
 
     if(shake>0){ shake*=0.86; }
