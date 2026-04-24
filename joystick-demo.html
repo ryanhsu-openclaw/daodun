@@ -141,10 +141,11 @@ resize();
     if(shieldActive){
       const p=1-(shieldUntil-t)/950;
       const ease = Math.sin(p * Math.PI * 0.5);
-      lArm=-0.98 - 0.02*ease;
-      lFore=-0.12 - 0.02*ease;
-      bodyTilt=-0.03 - 0.02*ease;
-      headTilt=0.02;
+      lArm=-1.02 - 0.03*ease;
+      lFore=-0.18 - 0.02*ease;
+      rArm=-0.95; rFore=0.22;
+      bodyTilt=-0.02 - 0.01*ease;
+      headTilt=0.01;
     }
     if(roarActive){
       const p=1-(roarUntil-t)/820;
@@ -196,9 +197,9 @@ resize();
     if(shieldActive){
       // reference-like front-left guard: shield in front of chest/head line
       const guardX = lh2x + 30*s;
-      const guardY = lh2y + 18*s;
+      const guardY = lh2y + 28*s;
       ctx.translate(guardX, guardY);
-      ctx.rotate(lArm + lFore + 0.96);
+      ctx.rotate(lArm + lFore + 0.92);
       ctx.scale(1.12,1.14);
     } else {
       ctx.translate(lh2x + 4*s, lh2y - 2*s);
