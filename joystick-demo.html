@@ -80,7 +80,7 @@ resize();
 
   document.getElementById('btnShield').onclick=()=>{shieldUntil=performance.now()+950; shake=8;};
   document.getElementById('btnRoar').onclick=()=>{roarUntil=performance.now()+820; shake=12;};
-  document.getElementById('btnSlash').onclick=()=>{slashUntil=performance.now()+760; flash=1; shake=14;};
+  document.getElementById('btnSlash').onclick=()=>{ const now=performance.now(); slashUntil = (slashUntil>now ? Math.min(slashUntil+380, now+1400) : now+760); flash=Math.max(flash,0.55); shake=Math.max(shake,8); };
 
   function limb(x,y,len,ang,w,color){
     const ex=x+Math.cos(ang)*len, ey=y+Math.sin(ang)*len;
@@ -160,20 +160,10 @@ resize();
     if(slashActive){
       const p=1-(slashUntil-t)/760;
       const ease = p < 0.5 ? (2*p*p) : (1 - Math.pow(-2*p+2,2)/2);
-      // forward slash: wind-up slightly back, then cut hard to front
-      rArm=-1.25 + ease*1.95;
-      rFore=-0.95 + ease*1.55;
-      bodyTilt=-0.12 + ease*0.28;
-      ctx.save();
-      ctx.translate(x+38*s*actor.dir, chestY-2*s);
-      ctx.scale(actor.dir,1);
-      ctx.rotate(0.35 + ease*1.65);
-      const g=ctx.createLinearGradient(0,-7*s,120*s,7*s);
-      g.addColorStop(0,'rgba(255,255,255,0)');
-      g.addColorStop(.5,'rgba(170,220,255,.86)');
-      g.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=g; ctx.fillRect(0,-7*s,126*s,14*s);
-      ctx.restore();
+      // smoother slash pose (no light-trail effect)
+      rArm=-1.12 + ease*1.52;
+      rFore=-0.82 + ease*1.18;
+      bodyTilt=-0.08 + ease*0.18;
     }
 
     // shadow
