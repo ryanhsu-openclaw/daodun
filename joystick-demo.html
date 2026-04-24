@@ -200,7 +200,7 @@ resize();
     ctx.save();
     if(fixedShieldPose){
       // reference-like front-left guard: shield in front of chest/head line
-      const guardX = lh2x + 14*s + (shieldActive ? 10 : 0) * actor.dir;
+      const guardX = lh2x + 14*s + (shieldActive ? 10 : 0);
       const guardY = lh2y + 30*s + 10;
       ctx.translate(guardX, guardY);
       ctx.rotate(lArm + lFore - 0.82);
