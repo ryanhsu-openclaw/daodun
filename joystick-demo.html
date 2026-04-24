@@ -230,6 +230,14 @@ resize();
     ctx.translate(sx,sy);
     ctx.clearRect(-sx,-sy,innerWidth,innerHeight);
     drawActor(now);
+    // debug info
+    ctx.fillStyle='rgba(0,0,0,.45)';
+    ctx.fillRect(8,8,220,64);
+    ctx.fillStyle='#fff';
+    ctx.font='12px monospace';
+    ctx.fillText(`W: ${viewportW}`, 16, 28);
+    ctx.fillText(`H: ${viewportH}`, 16, 44);
+    ctx.fillText(`center: (${Math.round(viewportW/2)}, ${Math.round(viewportH/2)})`, 16, 60);
     // center marker (very light) to align expected screen center
     ctx.strokeStyle='rgba(255,255,255,.45)';
     ctx.lineWidth=2;
