@@ -187,7 +187,7 @@ resize();
     ctx.restore();
 
     const shY=-torsoH*.75, shX=torsoW*.55;
-    const shieldArmDrop = 0; // keep hand position fixed
+    const shieldArmDrop = shieldActive ? 10 : 0; // move shield-side hand down 10px during guard
     const [lhx,lhy]=limb(-shX,shY + shieldArmDrop,46*s,lArm,12*s,'#6aa0ff');
     const [lh2x,lh2y]=limb(lhx,lhy,42*s,lArm+lFore,11*s,'#ffd7b0');
     const [rhx,rhy]=limb(shX,shY,46*s,rArm,12*s,'#6aa0ff');
@@ -198,7 +198,7 @@ resize();
     if(shieldActive){
       // reference-like front-left guard: shield in front of chest/head line
       const guardX = lh2x + 18*s;
-      const guardY = lh2y + 46*s;
+      const guardY = lh2y + 46*s + 10;
       ctx.translate(guardX, guardY);
       ctx.rotate(lArm + lFore);
       ctx.scale(1.16,1.20);
