@@ -91,13 +91,19 @@ resize();
 
   function drawActor(now){
     const s = 1.10 - actor.z * 0.85; // stronger near/far scaling
-    // dynamic bounds: allow full-screen roam while keeping whole character visible
-    const padLeft = Math.max(70, 170 * s);
-    const padRight = Math.max(92, 220 * s);   // extra prevent overflow on right
-    const padTop = Math.max(90, 210 * s);
-    const padBottom = Math.max(120, 270 * s); // extra prevent overflow on bottom
+    const tNow = performance.now();
+    const attacking = tNow < slashUntil;
+    const roaring = tNow < roarUntil;
+
+    // dynamic bounds: bias extra protection on right/bottom where sword trail/text usually overflow
+    const padLeft = Math.max(78, 190 * s);
+    const padTop = Math.max(96, 230 * s);
+    const padRight = Math.max(130, 330 * s) + (attacking ? 70 * s : 0) + (roaring ? 28 * s : 0);
+    const padBottom = Math.max(150, 360 * s) + (attacking ? 55 * s : 0) + (roaring ? 35 * s : 0);
+
     actor.x = Math.max(padLeft / viewportW, Math.min(1 - padRight / viewportW, actor.x));
     actor.y = Math.max(padTop / viewportH, Math.min(1 - padBottom / viewportH, actor.y));
+
     const x=actor.x*viewportW;
     const y=actor.y*viewportH;
 
@@ -256,7 +262,7 @@ resize();
     ctx.fillText(`inner center: (${cx}, ${cy})`, 16, 60);
     ctx.fillText(`actor(px): (${Math.round(actor.x*iw)}, ${Math.round(actor.y*ih)})`, 16, 76);
     ctx.fillText(`z: ${actor.z.toFixed(3)}  scale: ${(1.10 - actor.z*0.85).toFixed(3)}`, 16, 92);
-    ctx.fillText(`bounds: keep inside viewport (R/B boosted)`, 16, 108);
+    ctx.fillText(`bounds: RIGHT/BOTTOM hard clamp enabled`, 16, 108);
 
     // center crosshair
     ctx.strokeStyle='rgba(255,255,255,.7)';
