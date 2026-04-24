@@ -141,9 +141,9 @@ resize();
     if(shieldActive){
       const p=1-(shieldUntil-t)/950;
       const ease = Math.sin(p * Math.PI * 0.5);
-      lArm=-1.38 - 0.18*ease;
-      lFore=-0.72 - 0.22*ease;
-      bodyTilt=-0.04 - 0.05*ease;
+      lArm=-1.58 - 0.20*ease;
+      lFore=-1.02 - 0.24*ease;
+      bodyTilt=-0.06 - 0.06*ease;
       headTilt=0.08;
     }
     if(roarActive){
@@ -194,12 +194,12 @@ resize();
     // shield
     ctx.save();
     if(shieldActive){
-      // hard place shield in front of face/head area
-      const frontX = torsoW * 0.34;
-      const frontY = -torsoH * 0.98;
-      ctx.translate(frontX, frontY);
-      ctx.rotate(1.52);
-      ctx.scale(1.24,1.30);
+      // hand-raised forward guard: in front of torso, aligned with left hand
+      const guardX = lh2x + 14*s;
+      const guardY = lh2y - 14*s;
+      ctx.translate(guardX, guardY);
+      ctx.rotate(lArm + lFore + 1.28);
+      ctx.scale(1.15,1.18);
     } else {
       ctx.translate(lh2x + 4*s, lh2y - 2*s);
       ctx.rotate(lArm + lFore + 0.78);
@@ -209,12 +209,15 @@ resize();
     ctx.strokeStyle='rgba(255,255,255,.88)'; ctx.lineWidth=3*s; ctx.stroke();
     ctx.restore();
 
-    // sword
+    // sword (hand grips handle at hilt)
     ctx.save();
-    ctx.translate(rh2x,rh2y); ctx.rotate(rArm+rFore-0.18);
-    ctx.fillStyle='#c3d0e8'; ctx.fillRect(-2*s,-48*s,4*s,58*s);
-    ctx.fillStyle='#6f7f99'; ctx.fillRect(-10*s,8*s,20*s,4*s);
-    ctx.fillStyle='#5a4637'; ctx.fillRect(-2.5*s,11*s,5*s,12*s);
+    ctx.translate(rh2x,rh2y); ctx.rotate(rArm+rFore-0.08);
+    // blade extends forward from hilt
+    ctx.fillStyle='#c3d0e8'; ctx.fillRect(-2*s,-54*s,4*s,54*s);
+    // crossguard at grip point
+    ctx.fillStyle='#6f7f99'; ctx.fillRect(-10*s,-2*s,20*s,4*s);
+    // handle below guard (in hand)
+    ctx.fillStyle='#5a4637'; ctx.fillRect(-2.5*s,2*s,5*s,14*s);
     ctx.restore();
 
     const hipOff=torsoW*.24;
