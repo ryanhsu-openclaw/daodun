@@ -102,9 +102,9 @@ resize();
     const bottomExtent = Math.max(58, 138 * s) + (attacking ? 24 * s : 0);
 
     const minX = leftExtent;
-    const maxX = viewportW - rightExtent;
+    const maxX = Math.min(viewportW - rightExtent, 132);
     const minY = topExtent;
-    const maxY = viewportH - bottomExtent;
+    const maxY = Math.min(viewportH - bottomExtent, 162);
 
     let x = actor.x * viewportW;
     let y = actor.y * viewportH;
@@ -112,6 +112,7 @@ resize();
     y = Math.max(minY, Math.min(maxY, y));
 
     actor.x = x / viewportW;
+    actor.y = y / viewportH;
     actor.y = y / viewportH;
 
     const moving=Math.hypot(joy.dx,joy.dy)>0.08;
@@ -268,7 +269,7 @@ resize();
     ctx.fillText(`inner center: (${cx}, ${cy})`, 16, 60);
     ctx.fillText(`actor(px): (${Math.round(actor.x*iw)}, ${Math.round(actor.y*ih)})`, 16, 76);
     ctx.fillText(`z: ${actor.z.toFixed(3)}  scale: ${(1.10 - actor.z*0.85).toFixed(3)}`, 16, 92);
-    ctx.fillText(`bounds: relaxed clamp (keep visible + full roam)`, 16, 108);
+    ctx.fillText(`bounds: hard cap max at (132,162)`, 16, 108);
 
     // center crosshair
     ctx.strokeStyle='rgba(255,255,255,.7)';
