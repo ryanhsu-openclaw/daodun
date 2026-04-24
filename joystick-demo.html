@@ -219,7 +219,7 @@ resize();
       // filter-style full-screen movement
       actor.x += joy.dx * 0.52 * dt;
       actor.y += joy.dy * 0.28 * dt;
-      actor.z += joy.dy * 0.95 * dt;
+      actor.z -= joy.dy * 0.95 * dt;
       actor.z = Math.max(0.18, Math.min(0.98, actor.z));
       if(Math.abs(joy.dx)>0.06) actor.dir = Math.sign(joy.dx);
     }
