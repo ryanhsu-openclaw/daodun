@@ -179,14 +179,37 @@ resize();
     ctx.scale(actor.dir,1);
     ctx.rotate(bodyTilt);
 
-    ctx.fillStyle='#6aa0ff';
-    ctx.beginPath(); ctx.roundRect(-torsoW/2,-torsoH,torsoW,torsoH,16*s); ctx.fill();
+    ctx.fillStyle='#ff8fbc';
+    ctx.beginPath(); ctx.roundRect(-torsoW/2,-torsoH,torsoW,torsoH,18*s); ctx.fill();
+    // skirt
+    ctx.fillStyle='#ff6fa9';
+    ctx.beginPath();
+    ctx.moveTo(-torsoW*0.52, -torsoH*0.15);
+    ctx.lineTo(torsoW*0.52, -torsoH*0.15);
+    ctx.lineTo(torsoW*0.38, torsoH*0.08);
+    ctx.lineTo(-torsoW*0.38, torsoH*0.08);
+    ctx.closePath();
+    ctx.fill();
 
     ctx.save();
     ctx.translate(0,-torsoH-headR*.35); ctx.rotate(headTilt);
+    // hair back
+    ctx.fillStyle='#5a3b2f'; ctx.beginPath(); ctx.ellipse(0, 3*s, headR*1.06, headR*1.12, 0, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle='#ffd7b0'; ctx.beginPath(); ctx.arc(0,0,headR,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(-headR*.32,-headR*.08,headR*.09,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(headR*.32,-headR*.08,headR*.09,0,Math.PI*2); ctx.fill();
+    // bangs
+    ctx.fillStyle='#4a2f25'; ctx.beginPath(); ctx.ellipse(0, -headR*0.42, headR*0.92, headR*0.48, 0, Math.PI, 2*Math.PI); ctx.fill();
+    // eyes
+    ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(-headR*.30,-headR*.10,headR*.11,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(headR*.30,-headR*.10,headR*.11,0,Math.PI*2); ctx.fill();
+    // eye sparkle
+    ctx.fillStyle='rgba(255,255,255,.9)'; ctx.beginPath(); ctx.arc(-headR*.34,-headR*.14,headR*.03,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(headR*.26,-headR*.14,headR*.03,0,Math.PI*2); ctx.fill();
+    // blush
+    ctx.fillStyle='rgba(255,120,150,.35)';
+    ctx.beginPath(); ctx.ellipse(-headR*.48, headR*.12, headR*.22, headR*.12, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(headR*.48, headR*.12, headR*.22, headR*.12, 0, 0, Math.PI*2); ctx.fill();
+    // smile
+    ctx.strokeStyle='#b34b74'; ctx.lineWidth=2.2*s; ctx.beginPath(); ctx.arc(0, headR*.18, headR*.20, 0.15*Math.PI, 0.85*Math.PI); ctx.stroke();
     ctx.restore();
 
     const shY=-torsoH*.75, shX=torsoW*.55;
@@ -226,8 +249,8 @@ resize();
     ctx.restore();
 
     const hipOff=torsoW*.24;
-    const [lkx,lky]=limb(-hipOff,0,50*s,lLeg,13*s,'#3a3f49'); limb(lkx,lky,45*s,lLeg+lShin,12*s,'#30343c');
-    const [rkx,rky]=limb(hipOff,0,50*s,rLeg,13*s,'#3a3f49'); limb(rkx,rky,45*s,rLeg+rShin,12*s,'#30343c');
+    const [lkx,lky]=limb(-hipOff,0,50*s,lLeg,13*s,'#454b59'); limb(lkx,lky,45*s,lLeg+lShin,12*s,'#373c49');
+    const [rkx,rky]=limb(hipOff,0,50*s,rLeg,13*s,'#454b59'); limb(rkx,rky,45*s,rLeg+rShin,12*s,'#373c49');
 
     ctx.restore();
   }
