@@ -196,17 +196,18 @@ resize();
     ctx.save();
     if(shieldActive){
       // reference-like front-left guard: shield in front of chest/head line
-      const guardX = lh2x + 30*s;
-      const guardY = lh2y + 28*s;
+      const guardX = lh2x + 44*s;
+      const guardY = lh2y + 46*s;
       ctx.translate(guardX, guardY);
-      ctx.rotate(lArm + lFore + 0.92);
-      ctx.scale(1.12,1.14);
+      ctx.rotate(lArm + lFore + 0.78);
+      ctx.scale(1.16,1.20);
     } else {
       ctx.translate(lh2x + 4*s, lh2y - 2*s);
       ctx.rotate(lArm + lFore + 0.78);
       ctx.scale(0.95,0.95);
     }
     ctx.fillStyle='#9cb8ff'; ctx.beginPath(); ctx.ellipse(0,0,22*s,30*s,0,0,Math.PI*2); ctx.fill();
+    if(shieldActive){ ctx.fillStyle='rgba(255,80,80,.85)'; ctx.beginPath(); ctx.arc(0,0,3*s,0,Math.PI*2); ctx.fill(); } // shield debug dot
     ctx.strokeStyle='rgba(255,255,255,.88)'; ctx.lineWidth=3*s; ctx.stroke();
     ctx.restore();
 
