@@ -95,17 +95,24 @@ resize();
     const attacking = tNow < slashUntil;
     const roaring = tNow < roarUntil;
 
-    // dynamic bounds: bias extra protection on right/bottom where sword trail/text usually overflow
-    const padLeft = Math.max(78, 190 * s);
-    const padTop = Math.max(96, 230 * s);
-    const padRight = Math.max(130, 330 * s) + (attacking ? 70 * s : 0) + (roaring ? 28 * s : 0);
-    const padBottom = Math.max(150, 360 * s) + (attacking ? 55 * s : 0) + (roaring ? 35 * s : 0);
+    // hard pixel-space bounds from actual drawn extents (more reliable than symmetric padding)
+    const leftExtent = Math.max(120, 250 * s);
+    const rightExtent = Math.max(210, 430 * s) + (attacking ? 90 * s : 0) + (roaring ? 40 * s : 0);
+    const topExtent = Math.max(170, 360 * s);
+    const bottomExtent = Math.max(140, 260 * s) + (attacking ? 40 * s : 0);
 
-    actor.x = Math.max(padLeft / viewportW, Math.min(1 - padRight / viewportW, actor.x));
-    actor.y = Math.max(padTop / viewportH, Math.min(1 - padBottom / viewportH, actor.y));
+    const minX = leftExtent;
+    const maxX = viewportW - rightExtent;
+    const minY = topExtent;
+    const maxY = viewportH - bottomExtent;
 
-    const x=actor.x*viewportW;
-    const y=actor.y*viewportH;
+    let x = actor.x * viewportW;
+    let y = actor.y * viewportH;
+    x = Math.max(minX, Math.min(maxX, x));
+    y = Math.max(minY, Math.min(maxY, y));
+
+    actor.x = x / viewportW;
+    actor.y = y / viewportH;
 
     const moving=Math.hypot(joy.dx,joy.dy)>0.08;
     actor.walk += moving?0.34:0.1;
@@ -262,7 +269,7 @@ resize();
     ctx.fillText(`inner center: (${cx}, ${cy})`, 16, 60);
     ctx.fillText(`actor(px): (${Math.round(actor.x*iw)}, ${Math.round(actor.y*ih)})`, 16, 76);
     ctx.fillText(`z: ${actor.z.toFixed(3)}  scale: ${(1.10 - actor.z*0.85).toFixed(3)}`, 16, 92);
-    ctx.fillText(`bounds: RIGHT/BOTTOM hard clamp enabled`, 16, 108);
+    ctx.fillText(`bounds: pixel clamp L/R/T/B enabled`, 16, 108);
 
     // center crosshair
     ctx.strokeStyle='rgba(255,255,255,.7)';
