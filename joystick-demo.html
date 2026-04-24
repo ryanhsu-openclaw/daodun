@@ -139,8 +139,9 @@ resize();
     const roarActive = t < roarUntil;
     const slashActive = t < slashUntil;
     const walkShieldPose = moving || shieldActive;
+    const fixedShieldPose = !roarActive; // idle/walk/slash all keep same shield-hand position
 
-    if(walkShieldPose){
+    if(fixedShieldPose){
       const p=shieldActive ? (1-(shieldUntil-t)/950) : 1;
       const ease = Math.sin(p * Math.PI * 0.5);
       lArm=-0.78 - 0.02*ease;
@@ -189,7 +190,7 @@ resize();
     ctx.restore();
 
     const shY=-torsoH*.75, shX=torsoW*.55;
-    const shieldArmDrop = walkShieldPose ? 10 : 0; // walking or guarding -> shield hand in guard slot
+    const shieldArmDrop = fixedShieldPose ? 10 : 0; // idle/walk/slash all use same shield-hand slot
     const [lhx,lhy]=limb(-shX,shY + shieldArmDrop,46*s,lArm,12*s,'#6aa0ff');
     const [lh2x,lh2y]=limb(lhx,lhy,42*s,lArm+lFore,11*s,'#ffd7b0');
     const [rhx,rhy]=limb(shX,shY,46*s,rArm,12*s,'#6aa0ff');
@@ -197,7 +198,7 @@ resize();
 
     // shield
     ctx.save();
-    if(walkShieldPose){
+    if(fixedShieldPose){
       // reference-like front-left guard: shield in front of chest/head line
       const guardX = lh2x + 14*s;
       const guardY = lh2y + 30*s + 10;
