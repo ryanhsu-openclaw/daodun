@@ -141,9 +141,9 @@ resize();
     if(shieldActive){
       const p=1-(shieldUntil-t)/950;
       const ease = Math.sin(p * Math.PI * 0.5);
-      lArm=-1.9 - 0.35*ease;
-      lFore=-1.25 - 0.45*ease;
-      bodyTilt=-0.18 - 0.12*ease;
+      lArm=-1.55 - 0.28*ease;
+      lFore=-0.95 - 0.38*ease;
+      bodyTilt=-0.10 - 0.08*ease;
       headTilt=0.08;
     }
     if(roarActive){
@@ -194,14 +194,14 @@ resize();
     // shield
     ctx.save();
     if(shieldActive){
-      // keep shield in front of torso when guarding
-      ctx.translate(lh2x + 14*s, lh2y - 10*s);
-      ctx.rotate(lArm + lFore + 1.35);
-      ctx.scale(1.12,1.12);
+      // front-guard pose: move shield toward camera/front of chest
+      ctx.translate(lh2x + 24*s, lh2y - 16*s);
+      ctx.rotate(lArm + lFore + 1.72);
+      ctx.scale(1.18,1.22);
     } else {
-      ctx.translate(lh2x + 3*s, lh2y - 1*s);
-      ctx.rotate(lArm + lFore + 0.62);
-      ctx.scale(0.94,0.94);
+      ctx.translate(lh2x + 4*s, lh2y - 2*s);
+      ctx.rotate(lArm + lFore + 0.78);
+      ctx.scale(0.95,0.95);
     }
     ctx.fillStyle='#9cb8ff'; ctx.beginPath(); ctx.ellipse(0,0,20*s,26*s,0,0,Math.PI*2); ctx.fill();
     ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.lineWidth=3*s; ctx.stroke();
