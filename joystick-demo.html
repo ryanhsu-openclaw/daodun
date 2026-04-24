@@ -90,7 +90,8 @@ resize();
   }
 
   function drawActor(now){
-    const s = 1.10 - actor.z * 0.85; // stronger near/far scaling
+    const sRaw = 1.10 - actor.z * 0.85; // stronger near/far scaling
+    const s = Math.min(0.7, sRaw);
     const tNow = performance.now();
     const attacking = tNow < slashUntil;
     const roaring = tNow < roarUntil;
@@ -104,7 +105,7 @@ resize();
     const minX = leftExtent;
     const maxX = Math.min(viewportW - rightExtent, 140);
     const minY = topExtent;
-    const maxY = Math.min(viewportH - bottomExtent, 200);
+    const maxY = Math.min(viewportH - bottomExtent, 220);
 
     let x = actor.x * viewportW;
     let y = actor.y * viewportH;
@@ -268,8 +269,8 @@ resize();
     ctx.fillText(`visual W/H: ${vw} x ${vh}`, 16, 44);
     ctx.fillText(`inner center: (${cx}, ${cy})`, 16, 60);
     ctx.fillText(`actor(px): (${Math.round(actor.x*iw)}, ${Math.round(actor.y*ih)})`, 16, 76);
-    ctx.fillText(`z: ${actor.z.toFixed(3)}  scale: ${(1.10 - actor.z*0.85).toFixed(3)}`, 16, 92);
-    ctx.fillText(`bounds: hard cap max at (140,200)`, 16, 108);
+    ctx.fillText(`z: ${actor.z.toFixed(3)}  scale: ${Math.min(0.7, (1.10 - actor.z*0.85)).toFixed(3)}`, 16, 92);
+    ctx.fillText(`bounds: hard cap max at (140,220)`, 16, 108);
 
     // center crosshair
     ctx.strokeStyle='rgba(255,255,255,.7)';
