@@ -210,15 +210,23 @@ resize();
       booted=true;
     }
 
-    if(centerFrames>0){ hardCenter(); centerFrames--; }
-    // filter-style full-screen movement
-    actor.x += joy.dx*0.52*dt;
-    actor.y += joy.dy * 0.28 * dt;
-    actor.z += joy.dy * 0.55 * dt;
+    if(centerFrames>0){
+      // hard lock at exact center during startup frames
+      actor.x=0.5; actor.y=0.5; actor.z=0.82;
+      joy.dx=0; joy.dy=0;
+      centerFrames--;
+    } else {
+      // filter-style full-screen movement
+      actor.x += joy.dx * 0.52 * dt;
+      actor.y += joy.dy * 0.28 * dt;
+      actor.z += joy.dy * 0.55 * dt;
+      actor.z = Math.max(0.60, Math.min(0.995, actor.z));
+      if(Math.abs(joy.dx)>0.06) actor.dir = Math.sign(joy.dx);
+    }
 
-    actor.z = Math.max(0.60, Math.min(0.995, actor.z));
-
-    if(Math.abs(joy.dx)>0.06) actor.dir = Math.sign(joy.dx);
+    if(!Number.isFinite(actor.x) || !Number.isFinite(actor.y) || actor.x < 0 || actor.x > 1 || actor.y < 0 || actor.y > 1){
+      actor.x = 0.5; actor.y = 0.5; actor.z = 0.82;
+    }
 
     if(shake>0){ shake*=0.86; }
     const sx=(Math.random()-.5)*shake;
