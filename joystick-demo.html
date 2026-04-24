@@ -160,18 +160,19 @@ resize();
     if(slashActive){
       const p=1-(slashUntil-t)/760;
       const ease = p < 0.5 ? (2*p*p) : (1 - Math.pow(-2*p+2,2)/2);
-      rArm=-2.15 + ease*2.9;
-      rFore=-1.35 + ease*1.9;
-      bodyTilt=-0.35 + ease*0.45;
+      // forward slash: wind-up slightly back, then cut hard to front
+      rArm=-1.25 + ease*1.95;
+      rFore=-0.95 + ease*1.55;
+      bodyTilt=-0.12 + ease*0.28;
       ctx.save();
-      ctx.translate(x+34*s*actor.dir, chestY+2*s);
+      ctx.translate(x+38*s*actor.dir, chestY-2*s);
       ctx.scale(actor.dir,1);
-      ctx.rotate(-1.95+ease*2.7);
-      const g=ctx.createLinearGradient(0,-8*s,130*s,8*s);
+      ctx.rotate(0.35 + ease*1.65);
+      const g=ctx.createLinearGradient(0,-7*s,120*s,7*s);
       g.addColorStop(0,'rgba(255,255,255,0)');
-      g.addColorStop(.5,'rgba(170,220,255,.78)');
+      g.addColorStop(.5,'rgba(170,220,255,.86)');
       g.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=g; ctx.fillRect(0,-8*s,138*s,16*s);
+      ctx.fillStyle=g; ctx.fillRect(0,-7*s,126*s,14*s);
       ctx.restore();
     }
 
@@ -203,13 +204,14 @@ resize();
     // shield
     ctx.save();
     if(shieldActive){
-      ctx.translate(lh2x + 6*s, lh2y - 2*s);
-      ctx.rotate(lArm + lFore + 0.95);
-      ctx.scale(1.08,1.08);
+      // keep shield in front of torso when guarding
+      ctx.translate(lh2x + 14*s, lh2y - 10*s);
+      ctx.rotate(lArm + lFore + 1.35);
+      ctx.scale(1.12,1.12);
     } else {
-      ctx.translate(lh2x, lh2y);
-      ctx.rotate(lArm + lFore + 0.45);
-      ctx.scale(0.92,0.92);
+      ctx.translate(lh2x + 3*s, lh2y - 1*s);
+      ctx.rotate(lArm + lFore + 0.62);
+      ctx.scale(0.94,0.94);
     }
     ctx.fillStyle='#9cb8ff'; ctx.beginPath(); ctx.ellipse(0,0,20*s,26*s,0,0,Math.PI*2); ctx.fill();
     ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.lineWidth=3*s; ctx.stroke();
